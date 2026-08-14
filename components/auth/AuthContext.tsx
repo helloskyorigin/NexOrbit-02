@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -10,9 +10,18 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
-import { auth, googleProvider, githubProvider } from '../../lib/firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db, googleProvider, githubProvider } from '../../lib/firebase';
 import { AuthContextType, AuthUser, AuthView } from './types';
 import { Language, translations } from './translations';
+import {
+  AuthErrorInfo,
+  getFriendlyAuthErrorMessage,
+  validateEmailInput,
+  validateNameInput,
+  validatePasswordInput,
+  evaluatePasswordStrength,
+} from './authErrors';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -28,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         const savedLang = localStorage.getItem('nexorbit_lang') as Language;
-        if (savedLang === 'en' || savedLang === 'hi') {
+        if (savedLang) {
           return savedLang;
         }
       } catch (e) {}
@@ -41,72 +50,142 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitializing, setAuthInitializing] = useState<boolean>(true);
   const [authView, setAuthView] = useState<AuthView>('welcome');
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
+  const [authErrorInfo, setAuthErrorInfo] = useState<AuthErrorInfo | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string>('');
 
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => {
+    setAuthErrorInfo(null);
+  }, []);
+
+  const setAuthError = useCallback((err: AuthErrorInfo | string | null) => {
+    if (!err) {
+      setAuthErrorInfo(null);
+      return;
+    }
+    if (typeof err === 'string') {
+      setAuthErrorInfo({
+        code: 'custom',
+        message: err,
+        targetField: 'general',
+      });
+    } else {
+      setAuthErrorInfo(err);
+    }
+  }, []);
+
+  // Backwards-compatible string error getter
+  const error = authErrorInfo ? authErrorInfo.message : null;
 
   // Translation helper function
-  const t = (key: keyof typeof translations['en']): string => {
-    return translations[language][key] || translations['en'][key] || key;
-  };
+  const t = useCallback(
+    (key: string): string => {
+      return (
+        translations[language]?.[key] ||
+        translations['en']?.[key] ||
+        key
+      );
+    },
+    [language]
+  );
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem('nexorbit_lang', lang);
       }
     } catch (e) {}
+  }, []);
+
+  // Helper to load profile from Firestore or localStorage
+  const loadUserProfile = async (uid: string) => {
+    let profileData: {
+      displayName?: string;
+      country?: string;
+      language?: Language;
+      timezone?: string;
+      workStyle?: string;
+      onboardingCompleted?: boolean;
+    } = {};
+
+    // 1. Try local storage cache
+    try {
+      const stored = localStorage.getItem(`nexorbit_profile_${uid}`);
+      if (stored) {
+        profileData = JSON.parse(stored);
+      }
+    } catch (e) {}
+
+    // 2. Try Firestore doc
+    try {
+      if (db) {
+        const userRef = doc(db, 'users', uid);
+        const snapshot = await getDoc(userRef);
+        if (snapshot.exists()) {
+          const remoteData = snapshot.data();
+          profileData = { ...profileData, ...remoteData };
+        }
+      }
+    } catch (e) {
+      // Offline / fallback to local storage
+    }
+
+    return profileData;
   };
 
   // Listen to Firebase Auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Retrieve custom user profile metadata from local storage
-        let savedProfile: { displayName?: string; country?: string; language?: Language } = {};
-        try {
-          const stored = localStorage.getItem(`nexorbit_profile_${firebaseUser.uid}`);
-          if (stored) {
-            savedProfile = JSON.parse(stored);
-          }
-        } catch (e) {
-          console.error('Failed to parse local storage profile:', e);
-        }
-
+        const profile = await loadUserProfile(firebaseUser.uid);
         const provider = firebaseUser.providerData[0]?.providerId || 'password';
-        const displayName = savedProfile.displayName || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
-        const userLang = savedProfile.language || language || 'en';
+        const displayName =
+          profile.displayName ||
+          firebaseUser.displayName ||
+          firebaseUser.email?.split('@')[0] ||
+          '';
+        const userLang = profile.language || language || 'en';
+
+        // Check whether onboarding is completed
+        const hasCompletedOnboarding =
+          profile.onboardingCompleted === true ||
+          (!!profile.displayName && !!profile.country);
 
         const updatedUser: AuthUser = {
           uid: firebaseUser.uid,
           email: firebaseUser.email || '',
-          displayName: displayName,
+          displayName: displayName || 'User',
           photoURL: firebaseUser.photoURL || undefined,
           plan: 'Free Plan',
-          country: savedProfile.country || 'India 🇮🇳',
+          country: profile.country || 'India 🇮🇳',
           language: userLang,
-          isNewUser: false,
+          timezone: profile.timezone || 'Asia/Kolkata',
+          workStyle: profile.workStyle || 'General Productivity',
+          onboardingCompleted: hasCompletedOnboarding,
+          isNewUser: !hasCompletedOnboarding,
           provider: provider,
         };
 
         setUser(updatedUser);
         setLanguageState(userLang);
 
-        // Check if the user has completed profile setup (needs at least a name saved)
-        const hasCompletedProfile = !!savedProfile.displayName || !!firebaseUser.displayName;
-
-        if (hasCompletedProfile) {
+        if (hasCompletedOnboarding) {
           setIsAuthenticated(true);
           setAuthView((prev) => {
-            if (prev === 'welcome' || prev === 'authenticating' || prev === 'password' || prev === 'create-account') {
+            if (
+              prev === 'welcome' ||
+              prev === 'authenticating' ||
+              prev === 'password' ||
+              prev === 'create-account' ||
+              prev === 'email-signin'
+            ) {
               return 'success';
             }
             return prev;
           });
         } else {
-          // If profile setup has not been completed, direct them to profile setup page
+          // Direct new users to onboarding profile setup
           setAuthView('profile-setup');
           setIsAuthenticated(false);
         }
@@ -130,272 +209,282 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // REAL GOOGLE AUTHENTICATION
   const signInWithGoogle = async () => {
     setLoading(true);
-    setError(null);
-    setAuthView('authenticating');
+    setOauthLoading('google');
+    clearError();
 
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
+      const profile = await loadUserProfile(firebaseUser.uid);
 
-      let savedProfile: { displayName?: string; country?: string; language?: Language } = {};
-      try {
-        const stored = localStorage.getItem(`nexorbit_profile_${firebaseUser.uid}`);
-        if (stored) {
-          savedProfile = JSON.parse(stored);
-        }
-      } catch (e) {}
+      const hasCompleted =
+        profile.onboardingCompleted === true ||
+        (!!profile.displayName && !!profile.country);
 
-      const hasCompletedProfile = !!savedProfile.displayName || !!firebaseUser.displayName;
-
-      if (hasCompletedProfile) {
-        if (!savedProfile.displayName) {
-          const profile = {
-            displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-            country: 'India 🇮🇳',
-            language: language,
-          };
-          localStorage.setItem(`nexorbit_profile_${firebaseUser.uid}`, JSON.stringify(profile));
-        }
-
+      if (hasCompleted) {
         setAuthView('success');
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         setIsAuthenticated(true);
       } else {
         setAuthView('profile-setup');
       }
-    } catch (err: any) {
-      console.error('Google Sign-In failed:', err);
-      let userFriendlyError = 'An error occurred during Google Sign-In. Please try again.';
-
-      if (err.code === 'auth/popup-closed-by-user') {
-        userFriendlyError = 'The sign-in popup was closed before completing authentication.';
-      } else if (err.code === 'auth/popup-blocked') {
-        userFriendlyError = 'The sign-in popup was blocked by your browser. Please allow popups for this site.';
-      } else if (err.code === 'auth/network-request-failed') {
-        userFriendlyError = 'A network error occurred. Please check your internet connection.';
-      } else if (err.code === 'auth/account-exists-with-different-credential') {
-        userFriendlyError = 'An account already exists with the same email address but a different sign-in method. Please sign in using that method.';
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        userFriendlyError = 'The sign-in request was cancelled.';
-      }
-
-      setError(userFriendlyError);
-      setAuthView('welcome');
+    } catch (err: unknown) {
+      console.warn('Google Sign-In error:', err);
+      const friendlyError = getFriendlyAuthErrorMessage(err);
+      setAuthErrorInfo(friendlyError);
     } finally {
       setLoading(false);
+      setOauthLoading(null);
     }
   };
 
   // REAL GITHUB AUTHENTICATION
   const signInWithGitHub = async () => {
     setLoading(true);
-    setError(null);
-    setAuthView('authenticating');
+    setOauthLoading('github');
+    clearError();
 
     try {
       const result = await signInWithPopup(auth, githubProvider);
       const firebaseUser = result.user;
+      const profile = await loadUserProfile(firebaseUser.uid);
 
-      let savedProfile: { displayName?: string; country?: string; language?: Language } = {};
-      try {
-        const stored = localStorage.getItem(`nexorbit_profile_${firebaseUser.uid}`);
-        if (stored) {
-          savedProfile = JSON.parse(stored);
-        }
-      } catch (e) {}
+      const hasCompleted =
+        profile.onboardingCompleted === true ||
+        (!!profile.displayName && !!profile.country);
 
-      const hasCompletedProfile = !!savedProfile.displayName || !!firebaseUser.displayName;
-
-      if (hasCompletedProfile) {
-        if (!savedProfile.displayName) {
-          const profile = {
-            displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-            country: 'India 🇮🇳',
-            language: language,
-          };
-          localStorage.setItem(`nexorbit_profile_${firebaseUser.uid}`, JSON.stringify(profile));
-        }
-
+      if (hasCompleted) {
         setAuthView('success');
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         setIsAuthenticated(true);
       } else {
         setAuthView('profile-setup');
       }
-    } catch (err: any) {
-      console.error('GitHub Sign-In failed:', err);
-      let userFriendlyError = 'An error occurred during GitHub Sign-In. Please try again.';
-
-      if (err.code === 'auth/popup-closed-by-user') {
-        userFriendlyError = 'The sign-in popup was closed before completing authentication.';
-      } else if (err.code === 'auth/popup-blocked') {
-        userFriendlyError = 'The sign-in popup was blocked by your browser. Please allow popups for this site.';
-      } else if (err.code === 'auth/network-request-failed') {
-        userFriendlyError = 'A network error occurred. Please check your internet connection.';
-      } else if (err.code === 'auth/account-exists-with-different-credential') {
-        userFriendlyError = 'An account already exists with the same email address but a different sign-in method. Please sign in using that method.';
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        userFriendlyError = 'The sign-in request was cancelled.';
-      }
-
-      setError(userFriendlyError);
-      setAuthView('welcome');
+    } catch (err: unknown) {
+      console.warn('GitHub Sign-In error:', err);
+      const friendlyError = getFriendlyAuthErrorMessage(err);
+      setAuthErrorInfo(friendlyError);
     } finally {
       setLoading(false);
+      setOauthLoading(null);
     }
   };
 
-  // EMAIL STEP 1: VERIFY EMAIL PRE-CHECK
-  const signInWithEmail = async (email: string) => {
-    if (!email || !email.includes('@')) {
-      setError(t('invalidEmailError'));
+  // EMAIL STEP 1: VALIDATE EMAIL PRE-CHECK
+  const signInWithEmail = async (rawEmail: string) => {
+    const emailValidation = validateEmailInput(rawEmail);
+    if (!emailValidation.isValid) {
+      setAuthErrorInfo({
+        code: 'validation/invalid-email',
+        message: emailValidation.error || 'Enter a valid email address.',
+        targetField: 'email',
+      });
       return;
     }
-    setError(null);
-    setPendingEmail(email);
+
+    clearError();
+    setPendingEmail(emailValidation.cleanEmail);
     setAuthView('password');
   };
 
   // SUBMIT PASSWORD (EMAIL SIGN IN)
   const submitPassword = async (password: string) => {
-    if (!password || password.length < 6) {
-      setError(t('passwordMinError'));
+    const passwordValidation = validatePasswordInput(password);
+    if (!passwordValidation.isValid) {
+      setAuthErrorInfo({
+        code: 'validation/empty-password',
+        message: passwordValidation.error || 'Enter your password.',
+        targetField: 'password',
+      });
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setAuthView('authenticating');
+    clearError();
 
     try {
       await signInWithEmailAndPassword(auth, pendingEmail, password);
-    } catch (err: any) {
-      console.error('Email Sign-In failed:', err);
-      let userFriendlyError = 'Incorrect password or account not found. Please try again.';
-
-      if (err.code === 'auth/invalid-email') {
-        userFriendlyError = 'Please enter a valid email address.';
-      } else if (err.code === 'auth/user-not-found') {
-        userFriendlyError = 'No account found with this email. Please sign up instead.';
-      } else if (err.code === 'auth/wrong-password') {
-        userFriendlyError = 'Incorrect password. Please try again.';
-      } else if (err.code === 'auth/too-many-requests') {
-        userFriendlyError = 'Too many failed login attempts. Please try again later.';
-      } else if (err.code === 'auth/invalid-credential') {
-        userFriendlyError = 'Invalid email or password. Please try again.';
-      }
-
-      setError(userFriendlyError);
-      setAuthView('error');
+      // onAuthStateChanged will handle routing to success or profile-setup
+    } catch (err: unknown) {
+      console.warn('Email Sign-In error:', err);
+      const friendlyError = getFriendlyAuthErrorMessage(err);
+      setAuthErrorInfo(friendlyError);
     } finally {
       setLoading(false);
     }
   };
 
   // SIGN UP WITH EMAIL
-  const signUpWithEmail = async (email: string, password: string) => {
-    if (!email || !email.includes('@')) {
-      setError(t('invalidEmailError'));
+  const signUpWithEmail = async (rawEmail: string, password: string, fullName?: string) => {
+    // 1. Full name validation
+    if (fullName !== undefined) {
+      const nameValidation = validateNameInput(fullName);
+      if (!nameValidation.isValid) {
+        setAuthErrorInfo({
+          code: 'validation/invalid-name',
+          message: nameValidation.error || 'Enter your name.',
+          targetField: 'name',
+        });
+        return;
+      }
+    }
+
+    // 2. Email validation
+    const emailValidation = validateEmailInput(rawEmail);
+    if (!emailValidation.isValid) {
+      setAuthErrorInfo({
+        code: 'validation/invalid-email',
+        message: emailValidation.error || 'Enter a valid email address.',
+        targetField: 'email',
+      });
       return;
     }
-    if (!password || password.length < 6) {
-      setError(t('passwordMinError'));
+
+    // 3. Password validation
+    const passwordEval = evaluatePasswordStrength(password);
+    if (!passwordEval.isValid) {
+      setAuthErrorInfo({
+        code: 'validation/weak-password',
+        message: 'Password must be at least 8 characters.',
+        targetField: 'password',
+      });
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setPendingEmail(email);
-    setAuthView('authenticating');
+    clearError();
+    setPendingEmail(emailValidation.cleanEmail);
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      setAuthView('profile-setup');
-    } catch (err: any) {
-      console.error('Email Sign-Up failed:', err);
-      let userFriendlyError = 'Failed to create account. Please try again.';
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        emailValidation.cleanEmail,
+        password
+      );
 
-      if (err.code === 'auth/email-already-in-use') {
-        userFriendlyError = 'An account already exists with this email address.';
-      } else if (err.code === 'auth/invalid-email') {
-        userFriendlyError = 'Please enter a valid email address.';
-      } else if (err.code === 'auth/weak-password') {
-        userFriendlyError = 'The password is too weak. Please use at least 6 characters.';
-      } else if (err.code === 'auth/network-request-failed') {
-        userFriendlyError = 'A network error occurred. Please check your internet connection.';
+      const createdUser = credential.user;
+
+      if (fullName && fullName.trim()) {
+        const cleanName = fullName.trim();
+        try {
+          await updateProfile(createdUser, {
+            displayName: cleanName,
+          });
+          // Cache temporary name for onboarding step 1
+          localStorage.setItem('nexorbit_temp_fullname', cleanName);
+        } catch (e) {}
       }
 
-      setError(userFriendlyError);
-      setAuthView('error');
+      setAuthView('profile-setup');
+    } catch (err: unknown) {
+      console.warn('Email Sign-Up error:', err);
+      const friendlyError = getFriendlyAuthErrorMessage(err);
+      setAuthErrorInfo(friendlyError);
+      setAuthView('create-account');
     } finally {
       setLoading(false);
     }
   };
 
   // PASSWORD RESET
-  const sendPasswordReset = async (email: string) => {
-    if (!email || !email.includes('@')) {
-      setError(t('invalidEmailError'));
+  const sendPasswordReset = async (rawEmail: string) => {
+    const emailValidation = validateEmailInput(rawEmail);
+    if (!emailValidation.isValid) {
+      setAuthErrorInfo({
+        code: 'validation/invalid-email',
+        message: emailValidation.error || 'Enter a valid email address.',
+        targetField: 'email',
+      });
       return;
     }
+
     setLoading(true);
-    setError(null);
+    clearError();
 
     try {
-      await sendPasswordResetEmail(auth, email);
-    } catch (err: any) {
-      console.error('Password Reset failed:', err);
-      let userFriendlyError = 'Failed to send password reset link. Please try again.';
-
-      if (err.code === 'auth/invalid-email') {
-        userFriendlyError = 'Please enter a valid email address.';
-      } else if (err.code === 'auth/user-not-found') {
-        userFriendlyError = 'No account found with this email address.';
-      }
-
-      setError(userFriendlyError);
-      throw err;
+      await sendPasswordResetEmail(auth, emailValidation.cleanEmail);
+    } catch (err: unknown) {
+      console.warn('Password Reset error:', err);
+      const friendlyError = getFriendlyAuthErrorMessage(err);
+      setAuthErrorInfo(friendlyError);
     } finally {
       setLoading(false);
     }
   };
 
-  // PROFILE SETUP COMPLETION
-  const completeProfileSetup = async (profileData: { displayName: string; country: string; language: Language }) => {
+  // COMPLETE PROFILE SETUP & FIRST-TIME ONBOARDING
+  const completeProfileSetup = async (profileData: {
+    displayName: string;
+    country: string;
+    language: Language;
+    timezone?: string;
+    workStyle?: string;
+  }) => {
+    const nameValidation = validateNameInput(profileData.displayName);
+    if (!nameValidation.isValid) {
+      setAuthErrorInfo({
+        code: 'validation/invalid-name',
+        message: nameValidation.error || 'Enter your name.',
+        targetField: 'name',
+      });
+      return;
+    }
+
     setLoading(true);
-    setError(null);
-    setAuthView('authenticating');
+    clearError();
 
     try {
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) {
-        throw new Error('No authenticated user found.');
+        throw new Error('No authenticated user session found.');
       }
 
       // Update Firebase auth profile
       await updateProfile(firebaseUser, {
-        displayName: profileData.displayName,
+        displayName: nameValidation.cleanName,
       });
 
-      // Save to localStorage for persistence
-      const profile = {
-        displayName: profileData.displayName,
-        country: profileData.country,
-        language: profileData.language,
+      const fullProfile = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        displayName: nameValidation.cleanName,
+        country: profileData.country || 'India 🇮🇳',
+        language: profileData.language || 'en',
+        timezone: profileData.timezone || 'Asia/Kolkata',
+        workStyle: profileData.workStyle || 'General Productivity',
+        onboardingCompleted: true,
+        updatedAt: new Date().toISOString(),
       };
 
-      localStorage.setItem(`nexorbit_profile_${firebaseUser.uid}`, JSON.stringify(profile));
+      // Save to localStorage cache
+      localStorage.setItem(`nexorbit_profile_${firebaseUser.uid}`, JSON.stringify(fullProfile));
       localStorage.setItem('nexorbit_lang', profileData.language);
+      try {
+        localStorage.removeItem('nexorbit_temp_fullname');
+      } catch (e) {}
+
+      // Save to Firestore database if accessible
+      try {
+        if (db) {
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          await setDoc(userRef, fullProfile, { merge: true });
+        }
+      } catch (e) {
+        console.warn('Firestore user profile sync warning (local cache used):', e);
+      }
 
       // Update local state
       const updatedUser: AuthUser = {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
-        displayName: profileData.displayName,
+        displayName: nameValidation.cleanName,
         photoURL: firebaseUser.photoURL || undefined,
         plan: 'Free Plan',
-        country: profileData.country,
-        language: profileData.language,
+        country: fullProfile.country,
+        language: fullProfile.language,
+        timezone: fullProfile.timezone,
+        workStyle: fullProfile.workStyle,
+        onboardingCompleted: true,
         isNewUser: false,
         provider: firebaseUser.providerData[0]?.providerId || 'password',
       };
@@ -406,9 +495,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthView('success');
       await new Promise((resolve) => setTimeout(resolve, 600));
       setIsAuthenticated(true);
-    } catch (err: any) {
-      console.error('Profile Setup failed:', err);
-      setError(err.message || 'Failed to complete profile setup. Please try again.');
+    } catch (err: unknown) {
+      console.warn('Profile Setup caught error:', err);
+      const friendlyError = getFriendlyAuthErrorMessage(err);
+      setAuthErrorInfo(friendlyError);
       setAuthView('profile-setup');
     } finally {
       setLoading(false);
@@ -418,26 +508,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // REAL SIGN OUT
   const signOut = async () => {
     setLoading(true);
-    setError(null);
+    clearError();
     try {
       await firebaseSignOut(auth);
+    } catch (err: unknown) {
+      console.warn('Sign-Out error:', err);
+    } finally {
       setUser(null);
       setIsAuthenticated(false);
       setAuthView('welcome');
       setPendingEmail('');
-    } catch (err: any) {
-      console.error('Sign-Out failed:', err);
-    } finally {
       setLoading(false);
+      if (typeof window !== 'undefined') {
+        window.location.hash = '';
+      }
     }
   };
 
   // STUB FOR DEMO AUTH TOGGLE
   const toggleDemoAuth = () => {
-    console.warn('Real Firebase Authentication is active in Phase 2B.');
+    console.warn('Real Firebase Authentication is active.');
   };
 
-  // Derived / expose values
+  // Derived / exposed values
   const uid = user?.uid || null;
   const displayName = user?.displayName || null;
   const email = user?.email || null;
@@ -460,13 +553,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authLoading,
         authView,
         loading,
+        oauthLoading,
         error,
+        authErrorInfo,
         pendingEmail,
         language,
         setLanguage,
         t,
         setPendingEmail,
         setAuthView,
+        setAuthError,
         clearError,
         signInWithGoogle,
         signInWithGitHub,
@@ -491,3 +587,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

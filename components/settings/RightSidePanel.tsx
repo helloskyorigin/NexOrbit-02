@@ -8,6 +8,7 @@ import {
   Upload,
   Download,
   Trash2,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -18,6 +19,7 @@ export interface RightSidePanelProps {
   onDownloadData?: () => void;
   onDeleteAccount?: () => void;
   onNavigateSupport?: () => void;
+  onSignOut?: () => void;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
   onDownloadData,
   onDeleteAccount,
   onNavigateSupport,
+  onSignOut,
   className,
 }) => {
   return (
@@ -118,6 +121,20 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
             </div>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600" />
           </button>
+
+          {/* Sign Out Option */}
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 text-slate-700 transition-colors text-xs font-medium cursor-pointer group"
+            >
+              <div className="flex items-center gap-2 text-slate-700 group-hover:text-rose-600">
+                <LogOut className="h-3.5 w-3.5 text-slate-400 group-hover:text-rose-500" />
+                <span className="font-medium">Sign Out</span>
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-rose-600" />
+            </button>
+          )}
         </div>
 
         {/* Separated Destructive Action */}

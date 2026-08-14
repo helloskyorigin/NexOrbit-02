@@ -26,6 +26,7 @@ import { ManageSecurityModal } from './modals/ManageSecurityModal';
 import { ManageStorageModal } from './modals/ManageStorageModal';
 import { DeleteAccountModal } from './modals/DeleteAccountModal';
 import { useToast } from '../ui/Toast';
+import { useAuth } from '../auth/AuthContext';
 import { cn } from '../../lib/utils';
 
 export interface SettingsViewProps {
@@ -37,22 +38,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onNavigate,
   className,
 }) => {
+  const { user: authUser, signOut } = useAuth();
   const { addToast } = useToast();
 
   // Active subnav tab state
   const [activeTab, setActiveTab] = useState<SettingsTabId>('profile');
 
   // User profile state
-  const [user, setUser] = useState<UserProfile>({
-    name: 'Satyam',
-    email: 'satyam@example.com',
+  const [user, setUser] = useState<UserProfile>(() => ({
+    name: authUser?.displayName || (authUser?.email ? authUser.email.split('@')[0] : 'Satyam'),
+    email: authUser?.email || 'satyam@example.com',
     role: 'Workspace Member',
-    nexorbitId: 'nxo_7f3a9b2c1d4e',
-    memberSince: 'May 11, 2024',
+    nexorbitId: authUser?.id ? `nxo_${authUser.id.slice(0, 10)}` : 'nxo_7f3a9b2c1d4e',
+    memberSince: authUser?.createdAt ? new Date(authUser.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'May 11, 2024',
     timezone: '(GMT+05:30) Asia/Kolkata',
     language: 'English',
-    plan: 'Free Plan',
-  });
+    plan: authUser?.plan || 'Free Plan',
+  }));
 
   // General preferences state
   const [generalPrefs, setGeneralPrefs] = useState<GeneralPreferences>({
@@ -101,12 +103,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     });
   };
 
-  const handleSignOut = () => {
-    addToast({
-      type: 'info',
-      title: 'Signed Out',
-      description: 'You have been safely signed out of your NEXORBIT workspace.',
-    });
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      addToast({
+        type: 'info',
+        title: 'Signed Out',
+        description: 'You have been safely signed out of your NEXORBIT workspace.',
+      });
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
   };
 
   return (
@@ -136,6 +143,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 user={user}
                 onEditProfile={() => setIsEditProfileOpen(true)}
                 onViewPlans={() => setIsViewPlansOpen(true)}
+                onSignOut={handleSignOut}
               />
             )}
 
@@ -198,6 +206,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onDownloadData={handleDownloadData}
               onDeleteAccount={() => setIsDeleteAccountOpen(true)}
               onNavigateSupport={() => onNavigate('support')}
+              onSignOut={handleSignOut}
             />
           </div>
         </div>

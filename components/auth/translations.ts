@@ -1,6 +1,25 @@
-export type Language = 'en' | 'hi';
+export type Language = 'en' | 'hi' | 'bn' | 'ta' | 'te' | 'mr' | 'es' | 'fr' | 'de' | 'ja';
 
-export const translations = {
+export interface LanguageOption {
+  code: Language;
+  name: string;
+  nativeName: string;
+}
+
+export const SUPPORTED_LANGUAGES: LanguageOption[] = [
+  { code: 'en', name: 'English', nativeName: 'English' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
+  { code: 'te', name: 'Telugu', nativeName: 'తెలుగు' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español' },
+  { code: 'fr', name: 'French', nativeName: 'Français' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+];
+
+export const translations: Record<Language, Record<string, string>> = {
   en: {
     brandName: 'NexOrbit',
     brandSubtitle: 'AI BRAIN',
@@ -17,7 +36,7 @@ export const translations = {
     continueWithEmail: 'Continue with Email',
     passwordLabel: 'Password',
     passwordPlaceholder: 'Enter your password',
-    minPasswordLength: 'Minimum 6 characters',
+    minPasswordLength: 'Minimum 8 characters',
     signIn: 'Sign in',
     createAccountBtn: 'Create account',
     forgotPassword: 'Forgot password?',
@@ -38,14 +57,13 @@ export const translations = {
     
     // Onboarding Profile Setup
     profileSetupTitle: 'Welcome to NexOrbit',
-    profileSetupSubtitle: 'Tell us a little about you.',
-    progressIndicator: '1 of 1',
+    profileSetupSubtitle: "Let's personalize your workspace in a few quick steps.",
     nameLabel: 'Your name',
     namePlaceholder: 'Enter your full name',
-    countryLabel: 'Country',
+    countryLabel: 'Where are you based?',
     countryPlaceholder: 'Select your country',
     searchCountry: 'Search country...',
-    languageLabel: 'Preferred language',
+    languageLabel: 'What language would you like to use?',
     completeSetupBtn: 'Continue',
 
     // States & Reassurance
@@ -56,9 +74,9 @@ export const translations = {
     securityReassurance: 'Your account and data stay under your control.',
     
     // Errors
-    invalidEmailError: 'Please enter a valid email address.',
-    passwordMinError: 'Password must be at least 6 characters long.',
-    incorrectPasswordError: 'Incorrect password. Please try again.',
+    invalidEmailError: 'Enter a valid email address.',
+    passwordMinError: 'Password must be at least 8 characters.',
+    incorrectPasswordError: 'Incorrect password. Try again.',
   },
   hi: {
     brandName: 'NexOrbit',
@@ -76,7 +94,7 @@ export const translations = {
     continueWithEmail: 'ईमेल के साथ आगे बढ़ें',
     passwordLabel: 'पासवर्ड',
     passwordPlaceholder: 'अपना पासवर्ड दर्ज करें',
-    minPasswordLength: 'न्यूनतम 6 अक्षर',
+    minPasswordLength: 'न्यूनतम 8 अक्षर',
     signIn: 'साइन इन करें',
     createAccountBtn: 'खाता बनाएं',
     forgotPassword: 'पासवर्ड भूल गए?',
@@ -97,14 +115,13 @@ export const translations = {
     
     // Onboarding Profile Setup
     profileSetupTitle: 'NexOrbit में आपका स्वागत है',
-    profileSetupSubtitle: 'अपने बारे में थोड़ा बताएं।',
-    progressIndicator: '1 में से 1',
+    profileSetupSubtitle: 'आइए कुछ त्वरित चरणों में आपके वर्कस्पेस को अनुकूलित करें।',
     nameLabel: 'आपका नाम',
     namePlaceholder: 'अपना पूरा नाम दर्ज करें',
-    countryLabel: 'देश',
+    countryLabel: 'आप कहाँ स्थित हैं?',
     countryPlaceholder: 'अपना देश चुनें',
     searchCountry: 'देश खोजें...',
-    languageLabel: 'पसंदीदा भाषा',
+    languageLabel: 'आप किस भाषा का उपयोग करना चाहेंगे?',
     completeSetupBtn: 'आगे बढ़ें',
 
     // States & Reassurance
@@ -115,8 +132,81 @@ export const translations = {
     securityReassurance: 'आपका खाता और डेटा आपके नियंत्रण में रहता है।',
     
     // Errors
-    invalidEmailError: 'कृपया एक मान्य ईमेल पता दर्ज करें।',
-    passwordMinError: 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।',
-    incorrectPasswordError: 'गलत पासवर्ड। कृपया पुनः प्रयास करें।',
+    invalidEmailError: 'एक मान्य ईमेल पता दर्ज करें।',
+    passwordMinError: 'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।',
+    incorrectPasswordError: 'गलत पासवर्ड। पुनः प्रयास करें।',
+  },
+  bn: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'NexOrbit এ স্বাগতম',
+    welcomeSubtitle: 'আপনার ব্যক্তিগত AI ওয়ার্কস্পেস।',
+    profileSetupTitle: 'NexOrbit এ স্বাগতম',
+    profileSetupSubtitle: 'আসুন আপনার ওয়ার্কস্পেস ব্যক্তিগতকৃত করি।',
+    languageLabel: 'আপনি কোন ভাষা ব্যবহার করতে চান?',
+    completeSetupBtn: 'এগিয়ে যান',
+  },
+  ta: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'NexOrbit-க்கு வரவேற்கிறோம்',
+    welcomeSubtitle: 'உங்கள் தனிப்பட்ட AI பணியிடம்.',
+    profileSetupTitle: 'NexOrbit-க்கு வரவேற்கிறோம்',
+    profileSetupSubtitle: 'உங்கள் பணியிடத்தை தனிப்பயனாக்குவோம்.',
+    languageLabel: 'நீங்கள் எந்த மொழியைப் பயன்படுத்த விரும்புகிறீர்கள்?',
+    completeSetupBtn: 'தொடரவும்',
+  },
+  te: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'NexOrbit కు స్వాగతం',
+    welcomeSubtitle: 'మీ వ్యక్తిగత AI వర్క్‌స్పేస్.',
+    profileSetupTitle: 'NexOrbit కు స్వాగతం',
+    profileSetupSubtitle: 'మీ వర్క్‌స్పేస్‌ను అనుకూలీకరిద్దాం.',
+    languageLabel: 'మీరు ఏ భాషను ఉపయోగించాలనుకుంటున్నారు?',
+    completeSetupBtn: 'కొనసాగించండి',
+  },
+  mr: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'NexOrbit मध्ये आपले स्वागत आहे',
+    welcomeSubtitle: 'आपली वैयक्तिक AI कार्यक्षेत्र.',
+    profileSetupTitle: 'NexOrbit मध्ये आपले स्वागत आहे',
+    profileSetupSubtitle: 'चला आपले कार्यक्षेत्र सानुकूलित करूया.',
+    languageLabel: 'तुम्हाला कोणती भाषा वापरायला आवडेल?',
+    completeSetupBtn: 'पुढे जा',
+  },
+  es: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'Bienvenido a NexOrbit',
+    welcomeSubtitle: 'Tu espacio de trabajo de IA personal.',
+    profileSetupTitle: 'Bienvenido a NexOrbit',
+    profileSetupSubtitle: 'Personalicemos tu espacio de trabajo.',
+    languageLabel: '¿Qué idioma te gustaría usar?',
+    completeSetupBtn: 'Continuar',
+  },
+  fr: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'Bienvenue sur NexOrbit',
+    welcomeSubtitle: 'Votre espace de travail IA personnel.',
+    profileSetupTitle: 'Bienvenue sur NexOrbit',
+    profileSetupSubtitle: 'Personnalisons votre espace de travail.',
+    languageLabel: 'Quelle langue souhaitez-vous utiliser ?',
+    completeSetupBtn: 'Continuer',
+  },
+  de: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'Willkommen bei NexOrbit',
+    welcomeSubtitle: 'Ihr persönlicher KI-Arbeitsbereich.',
+    profileSetupTitle: 'Willkommen bei NexOrbit',
+    profileSetupSubtitle: 'Lassen Sie uns Ihren Arbeitsbereich personalisieren.',
+    languageLabel: 'Welche Sprache möchten Sie verwenden?',
+    completeSetupBtn: 'Fortfahren',
+  },
+  ja: {
+    brandName: 'NexOrbit',
+    welcomeTitle: 'NexOrbit へようこそ',
+    welcomeSubtitle: 'あなた専用のパーソナルAIワークスペース。',
+    profileSetupTitle: 'NexOrbit へようこそ',
+    profileSetupSubtitle: 'ワークスペースをパーソナライズしましょう。',
+    languageLabel: '使用する言語を選択してください',
+    completeSetupBtn: '次へ進む',
   },
 };
+

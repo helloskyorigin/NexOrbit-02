@@ -13,9 +13,12 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ConnectorId } from './ConnectorModal';
+import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../ui/Toast';
 
 export interface NavItem {
   id: string;
@@ -49,6 +52,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectPage,
   className,
 }) => {
+  const { user, signOut } = useAuth();
+  const { addToast } = useToast();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('nexorbit_sidebar_collapsed') === 'true';
@@ -65,6 +70,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return next;
     });
   };
+
+  const handleSignOut = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await signOut();
+      addToast({
+        type: 'info',
+        title: 'Signed Out',
+        description: 'You have been safely signed out.',
+      });
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
+  };
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'User';
+  const displayPlan = user?.plan || 'Free Plan';
+  const initialLetter = displayName.charAt(0).toUpperCase() || 'U';
 
   return (
     <aside
@@ -214,11 +237,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Workspace Profile Switcher Pill */}
-        <div className="pt-2 border-t border-slate-100/80">
+        {/* Workspace Profile Switcher Pill & Logout */}
+        <div className="pt-2 border-t border-slate-100/80 space-y-1">
           <div
             onClick={() => onSelectPage('settings')}
-            title={isCollapsed ? 'Satyam (Free Plan)' : undefined}
+            title={isCollapsed ? `${displayName} (${displayPlan})` : undefined}
             className={cn(
               'flex items-center rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group',
               isCollapsed ? 'justify-center p-1.5' : 'justify-between p-2'
@@ -226,15 +249,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
-                S
+                {initialLetter}
               </div>
               {!isCollapsed && (
                 <div className="min-w-0 text-left">
                   <div className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
-                    Satyam
+                    {displayName}
                   </div>
                   <div className="text-[10px] text-slate-500 font-normal truncate">
-                    Free Plan
+                    {displayPlan}
                   </div>
                 </div>
               )}
@@ -243,6 +266,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
             )}
           </div>
+
+          {/* Quick Sign Out Action */}
+          <button
+            onClick={handleSignOut}
+            title={isCollapsed ? 'Sign Out / Log Out' : undefined}
+            className={cn(
+              'w-full flex items-center transition-all duration-150 text-left cursor-pointer rounded-2xl text-rose-600 hover:bg-rose-50/80 hover:text-rose-700',
+              isCollapsed
+                ? 'justify-center p-2.5'
+                : 'gap-3.5 px-4 py-2 text-[12px] font-medium'
+            )}
+          >
+            <LogOut className="h-4 w-4 shrink-0 text-rose-500" />
+            {!isCollapsed && <span className="truncate">Sign out</span>}
+          </button>
         </div>
       </div>
     </aside>

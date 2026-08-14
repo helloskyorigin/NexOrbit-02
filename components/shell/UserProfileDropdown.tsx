@@ -44,13 +44,17 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
     });
   };
 
-  const handleSignOutClick = () => {
-    signOut();
-    addToast({
-      type: 'info',
-      title: 'Signed Out',
-      description: 'You have been signed out of NexOrbit.',
-    });
+  const handleSignOutClick = async () => {
+    try {
+      await signOut();
+      addToast({
+        type: 'info',
+        title: 'Signed Out',
+        description: 'You have been safely signed out. Redirecting to login...',
+      });
+    } catch (e) {
+      console.error('Sign out error:', e);
+    }
   };
 
   const menuItems: DropdownItem[] = [

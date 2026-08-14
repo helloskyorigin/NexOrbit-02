@@ -5,7 +5,13 @@ import { AlertCircle, ArrowLeft, RotateCcw } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 
 export const AuthErrorView: React.FC = () => {
-  const { error, setAuthView, clearError, t } = useAuth();
+  const { authErrorInfo, error, setAuthView, clearError } = useAuth();
+
+  const title = authErrorInfo?.title || 'Unable to sign in';
+  const description =
+    authErrorInfo?.message ||
+    error ||
+    'Something went wrong during sign-in. Please try again.';
 
   return (
     <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
@@ -13,13 +19,13 @@ export const AuthErrorView: React.FC = () => {
         <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-rose-50 border border-rose-100 text-rose-600">
           <AlertCircle className="h-6 w-6 text-rose-600" />
         </div>
-        
+
         <div className="space-y-1.5">
           <h2 className="text-xl font-semibold tracking-tight text-slate-950">
-            Authentication failed
+            {title}
           </h2>
-          <p className="text-sm text-slate-500 font-normal max-w-xs mx-auto leading-relaxed">
-            {error || 'An unexpected error occurred during authentication.'}
+          <p className="text-xs text-slate-500 font-normal max-w-xs mx-auto leading-relaxed">
+            {description}
           </p>
         </div>
       </div>

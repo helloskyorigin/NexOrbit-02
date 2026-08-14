@@ -1,4 +1,5 @@
 import { Language, translations } from './translations';
+import { AuthErrorInfo } from './authErrors';
 
 export type AuthView =
   | 'welcome'
@@ -21,6 +22,8 @@ export interface AuthUser {
   country?: string;
   language?: Language;
   timezone?: string;
+  workStyle?: string;
+  onboardingCompleted?: boolean;
   isNewUser?: boolean;
   provider?: string;
 }
@@ -38,21 +41,31 @@ export interface AuthContextType {
   authLoading: boolean;
   authView: AuthView;
   loading: boolean;
+  oauthLoading: 'google' | 'github' | null;
   error: string | null;
+  authErrorInfo: AuthErrorInfo | null;
   pendingEmail: string;
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: keyof typeof translations['en']) => string;
+  t: (key: string) => string;
   setPendingEmail: (email: string) => void;
   setAuthView: (view: AuthView) => void;
+  setAuthError: (err: AuthErrorInfo | string | null) => void;
   clearError: () => void;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<void>;
   submitPassword: (password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
-  completeProfileSetup: (profileData: { displayName: string; country: string; language: Language }) => Promise<void>;
+  completeProfileSetup: (profileData: {
+    displayName: string;
+    country: string;
+    language: Language;
+    timezone?: string;
+    workStyle?: string;
+  }) => Promise<void>;
   signOut: () => void;
   toggleDemoAuth: () => void;
 }
+

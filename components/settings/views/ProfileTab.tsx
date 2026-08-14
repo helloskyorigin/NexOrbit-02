@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Pencil, ChevronRight, User, Mail, Globe, Clock } from 'lucide-react';
+import { Pencil, ChevronRight, User, Mail, Globe, Clock, LogOut } from 'lucide-react';
 import { UserProfile } from '../types';
 import { cn } from '../../../lib/utils';
 
@@ -9,6 +9,7 @@ export interface ProfileTabProps {
   user: UserProfile;
   onEditProfile: () => void;
   onViewPlans: () => void;
+  onSignOut?: () => void;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   user,
   onEditProfile,
   onViewPlans,
+  onSignOut,
   className,
 }) => {
   const initialLetter = user.name ? user.name.charAt(0).toUpperCase() : 'S';
@@ -168,6 +170,39 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Account Session & Sign Out Card */}
+      {onSignOut && (
+        <div className="space-y-2.5 pt-1">
+          <div>
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
+              Account Session
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Safely sign out from this device and return to login.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-bold text-slate-900">
+                Active Session
+              </h4>
+              <p className="text-xs text-slate-500 font-normal">
+                Signed in as {user.email || user.name}
+              </p>
+            </div>
+
+            <button
+              onClick={onSignOut}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold text-xs transition-colors shrink-0 cursor-pointer self-start sm:self-center"
+            >
+              <LogOut className="h-4 w-4 text-rose-600" />
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
