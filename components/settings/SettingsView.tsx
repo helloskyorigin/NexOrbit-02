@@ -110,96 +110,99 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className={cn('w-full max-w-7xl mx-auto space-y-4 pb-12', className)}>
-      {/* Top Header Bar */}
-      <SettingsHeader
-        user={user}
-        onEditProfile={() => setIsEditProfileOpen(true)}
-        onOpenNotifications={() => setActiveTab('notifications')}
-      />
+    <div className={cn('min-h-screen bg-slate-50/50 pb-28 antialiased', className)}>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
+        {/* Top Header Bar */}
+        <SettingsHeader
+          user={user}
+          onEditProfile={() => setIsEditProfileOpen(true)}
+          onOpenNotifications={() => setActiveTab('notifications')}
+        />
 
-      {/* Main 3-Column Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Sub-navigation (lg:col-span-3) */}
-        <div className="lg:col-span-3">
-          <SettingsSectionNav
-            activeTab={activeTab}
-            onSelectTab={setActiveTab}
-          />
-        </div>
-
-        {/* Center Column: Active View Content (lg:col-span-6) */}
-        <div className="lg:col-span-6 min-w-0">
-          {activeTab === 'profile' && (
-            <ProfileTab
-              user={user}
-              onEditProfile={() => setIsEditProfileOpen(true)}
-              onViewPlans={() => setIsViewPlansOpen(true)}
+        {/* Main 3-Column Layout Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Sub-navigation (lg:col-span-3) */}
+          <div className="lg:col-span-3">
+            <SettingsSectionNav
+              activeTab={activeTab}
+              onSelectTab={setActiveTab}
             />
-          )}
+          </div>
 
-          {activeTab === 'general' && (
-            <GeneralTab
-              preferences={generalPrefs}
-              onChange={(updated) => setGeneralPrefs({ ...generalPrefs, ...updated })}
-            />
-          )}
+          {/* Center Column: Active View Content (lg:col-span-5) */}
+          <div className="lg:col-span-5 min-w-0">
+            {activeTab === 'profile' && (
+              <ProfileTab
+                user={user}
+                onEditProfile={() => setIsEditProfileOpen(true)}
+                onViewPlans={() => setIsViewPlansOpen(true)}
+              />
+            )}
 
-          {activeTab === 'ai-brain' && (
-            <AIBrainTab
-              preferences={aiPrefs}
-              onChange={(updated) => setAiPrefs({ ...aiPrefs, ...updated })}
-            />
-          )}
+            {activeTab === 'general' && (
+              <GeneralTab
+                preferences={generalPrefs}
+                onChange={(updated) => setGeneralPrefs({ ...generalPrefs, ...updated })}
+              />
+            )}
 
-          {activeTab === 'memory-data' && (
-            <MemoryDataTab
-              onNavigateMemory={() => onNavigate('memory')}
-            />
-          )}
+            {activeTab === 'ai-brain' && (
+              <AIBrainTab
+                preferences={aiPrefs}
+                onChange={(updated) => setAiPrefs({ ...aiPrefs, ...updated })}
+              />
+            )}
 
-          {activeTab === 'privacy-security' && (
-            <PrivacySecurityTab
-              onNavigateConnectedApps={() => onNavigate('connected-apps')}
-            />
-          )}
+            {activeTab === 'memory-data' && (
+              <MemoryDataTab
+                onNavigateMemory={() => onNavigate('memory')}
+              />
+            )}
 
-          {activeTab === 'notifications' && (
-            <NotificationsTab
-              preferences={notifPrefs}
-              onChange={(updated) => setNotifPrefs({ ...notifPrefs, ...updated })}
-            />
-          )}
+            {activeTab === 'privacy-security' && (
+              <PrivacySecurityTab
+                onNavigateConnectedApps={() => onNavigate('connected-apps')}
+              />
+            )}
 
-          {activeTab === 'appearance' && <AppearanceTab />}
+            {activeTab === 'notifications' && (
+              <NotificationsTab
+                preferences={notifPrefs}
+                onChange={(updated) => setNotifPrefs({ ...notifPrefs, ...updated })}
+              />
+            )}
 
-          {activeTab === 'connected-apps' && (
-            <ConnectedAppsTab
-              onNavigateConnectedApps={() => onNavigate('connected-apps')}
-            />
-          )}
+            {activeTab === 'appearance' && <AppearanceTab />}
 
-          {activeTab === 'advanced' && (
-            <AdvancedTab
-              nexorbitId={user.nexorbitId}
-              onSignOut={handleSignOut}
+            {activeTab === 'connected-apps' && (
+              <ConnectedAppsTab
+                onNavigateConnectedApps={() => onNavigate('connected-apps')}
+              />
+            )}
+
+            {activeTab === 'advanced' && (
+              <AdvancedTab
+                nexorbitId={user.nexorbitId}
+                onSignOut={handleSignOut}
+                onDeleteAccount={() => setIsDeleteAccountOpen(true)}
+              />
+            )}
+          </div>
+
+          {/* Right Column: Auxiliary Control Cards (lg:col-span-4) */}
+          <div className="lg:col-span-4">
+            <RightSidePanel
+              onManageSecurity={() => setIsSecurityOpen(true)}
+              onManageStorage={() => setIsStorageOpen(true)}
+              onExportData={handleExportData}
+              onDownloadData={handleDownloadData}
               onDeleteAccount={() => setIsDeleteAccountOpen(true)}
+              onNavigateSupport={() => onNavigate('support')}
             />
-          )}
-        </div>
-
-        {/* Right Column: Auxiliary Control Cards (lg:col-span-3) */}
-        <div className="lg:col-span-3">
-          <RightSidePanel
-            onManageSecurity={() => setIsSecurityOpen(true)}
-            onManageStorage={() => setIsStorageOpen(true)}
-            onExportData={handleExportData}
-            onDownloadData={handleDownloadData}
-            onDeleteAccount={() => setIsDeleteAccountOpen(true)}
-            onNavigateSupport={() => onNavigate('support')}
-          />
+          </div>
         </div>
       </div>
+
 
       {/* Modals */}
       <EditProfileModal

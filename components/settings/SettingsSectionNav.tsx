@@ -83,7 +83,7 @@ export const SettingsSectionNav: React.FC<SettingsSectionNavProps> = ({
   return (
     <div
       className={cn(
-        'p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col gap-1',
+        'p-1.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col gap-0.5',
         className
       )}
     >
@@ -94,16 +94,16 @@ export const SettingsSectionNav: React.FC<SettingsSectionNavProps> = ({
             key={section.id}
             onClick={() => onSelectTab(section.id)}
             className={cn(
-              'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors duration-150 cursor-pointer text-left select-none',
+              'w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors duration-150 cursor-pointer text-left select-none',
               isActive
-                ? 'bg-blue-50/90 text-blue-600 font-bold'
-                : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                ? 'bg-indigo-50/90 text-indigo-700 font-bold border border-indigo-100/80 shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
             )}
           >
             <span
               className={cn(
                 'shrink-0 transition-colors',
-                isActive ? 'text-blue-600' : 'text-slate-500'
+                isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'
               )}
             >
               {section.icon}
@@ -115,3 +115,4 @@ export const SettingsSectionNav: React.FC<SettingsSectionNavProps> = ({
     </div>
   );
 };
+

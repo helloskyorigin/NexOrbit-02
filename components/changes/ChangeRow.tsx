@@ -36,61 +36,10 @@ export const ChangeRow: React.FC<ChangeRowProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const getIcon = () => {
-    switch (item.iconType) {
-      case 'mail':
-        return <Mail className="h-5 w-5 text-indigo-600" />;
-      case 'calendar':
-        return <CalendarIcon className="h-5 w-5 text-blue-600" />;
-      case 'doc':
-        return <FileText className="h-5 w-5 text-emerald-600" />;
-      case 'task':
-        return <CheckSquare className="h-5 w-5 text-amber-600" />;
-      case 'mention':
-        return <AtSign className="h-5 w-5 text-blue-600" />;
-      case 'code':
-        return <Code className="h-5 w-5 text-purple-600" />;
-      default:
-        return <Mail className="h-5 w-5 text-indigo-600" />;
-    }
-  };
-
-  const getBadgeDotClass = () => {
-    switch (item.badgeDotColor) {
-      case 'purple':
-        return 'bg-purple-500 ring-2 ring-white';
-      case 'blue':
-        return 'bg-blue-500 ring-2 ring-white';
-      case 'emerald':
-        return 'bg-emerald-500 ring-2 ring-white';
-      case 'amber':
-        return 'bg-amber-500 ring-2 ring-white';
-      default:
-        return 'bg-indigo-500 ring-2 ring-white';
-    }
-  };
-
-  const getIconBgClass = () => {
-    switch (item.iconType) {
-      case 'mail':
-        return 'bg-indigo-50/80 border-indigo-100/60';
-      case 'calendar':
-        return 'bg-blue-50/80 border-blue-100/60';
-      case 'doc':
-        return 'bg-emerald-50/80 border-emerald-100/60';
-      case 'task':
-        return 'bg-amber-50/80 border-amber-100/60';
-      case 'mention':
-        return 'bg-sky-50/80 border-sky-100/60';
-      case 'code':
-        return 'bg-purple-50/80 border-purple-100/60';
-      default:
-        return 'bg-slate-50 border-slate-200/60';
-    }
-  };
+  const isImportant = item.importance === 'important';
 
   const handleRowClick = (e: React.MouseEvent) => {
-    // Avoid expanding if clicking an action button specifically
+    // Avoid expanding if clicking a direct action button specifically
     if ((e.target as HTMLElement).closest('button.direct-action')) return;
     setIsExpanded((prev) => !prev);
     if (!item.isRead && onToggleRead) {
@@ -104,107 +53,75 @@ export const ChangeRow: React.FC<ChangeRowProps> = ({
       onClick={handleRowClick}
       className={cn(
         "group relative bg-white rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden",
-        isExpanded
-          ? "border-indigo-200/80 shadow-[0_4px_16px_rgba(79,70,229,0.06)] ring-1 ring-indigo-500/10"
-          : "border-slate-100 hover:border-slate-200/90 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-xs"
+        isImportant
+          ? "border-indigo-200/90 shadow-[0_2px_10px_rgba(79,70,229,0.05)] ring-1 ring-indigo-500/15"
+          : "border-slate-200/80 hover:border-slate-300 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-2xs",
+        isExpanded && "border-indigo-300 shadow-md"
       )}
     >
-      {/* Unread indicator bar */}
+      {/* Subtle Unread Bar */}
       {!item.isRead && (
-        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600" />
       )}
 
       {/* Main Row Content */}
       <div className="p-4 sm:p-5 flex items-start justify-between gap-3 sm:gap-4">
-        {/* Left Icon Area */}
+        {/* Source Icon on Left */}
         <div className="relative shrink-0 mt-0.5">
-          <div
-            className={cn(
-              "h-11 w-11 rounded-2xl flex items-center justify-center border transition-transform duration-200 group-hover:scale-105",
-              getIconBgClass()
-            )}
-          >
-            {getIcon()}
+          <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center transition-transform duration-200 group-hover:scale-105 shadow-2xs">
+            <SourceIcon type={item.sourceId} className="h-5 w-5" />
           </div>
-          {/* Signal Indicator Dot */}
-          <div
-            className={cn(
-              "absolute -top-1 -right-1 h-3 w-3 rounded-full",
-              getBadgeDotClass()
-            )}
-          />
+          {!item.isRead && (
+            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-indigo-600 ring-2 ring-white" />
+          )}
         </div>
 
-        {/* Center Details */}
+        {/* Center Text Details */}
         <div className="flex-1 min-w-0 pr-2">
+          {/* Header Row: Title & Important Badge */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-[14px] font-semibold text-slate-900 tracking-tight leading-snug">
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight leading-snug">
               {item.title}
             </h3>
-            {item.importance === 'important' && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60">
-                Actionable
+            {isImportant && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                <Sparkles className="h-2.5 w-2.5 text-indigo-600" />
+                <span>Important</span>
               </span>
             )}
           </div>
 
-          <p className="text-[13px] text-slate-500 font-normal mt-0.5 line-clamp-1 leading-relaxed">
+          {/* One-line Context */}
+          <p className="text-xs text-slate-600 font-medium mt-1 line-clamp-1 leading-relaxed">
             {item.contextSubtitle}
           </p>
 
-          {/* Source badge */}
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500 font-medium">
-            <SourceIcon type={item.sourceId} className="h-3.5 w-3.5" />
+          {/* Source Name + Timestamp formatted as 'Google Calendar · 9:41 AM' */}
+          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-400 font-medium">
             <span>{item.sourceName}</span>
+            <span>·</span>
+            <span>{item.timestamp}</span>
           </div>
         </div>
 
-        {/* Right Info: Time + Avatar + Chevron */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0 pt-0.5">
-          <div className="text-right">
-            <span className="text-xs text-slate-400 font-medium whitespace-nowrap block">
-              {item.timestamp}
-            </span>
-          </div>
+        {/* Right Action Affordance & Arrow */}
+        <div className="flex items-center gap-3 shrink-0 pt-0.5">
+          {item.personAvatar ? (
+            <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-slate-200 shrink-0 hidden sm:block">
+              <Image
+                src={item.personAvatar}
+                alt={item.personName || 'User'}
+                fill
+                className="object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          ) : null}
 
-          {/* Avatar or Icon Indicator */}
-          <div className="relative flex items-center justify-center">
-            {item.personAvatar ? (
-              <div className="relative h-7 w-7 rounded-full overflow-hidden ring-1 ring-slate-200/80 shrink-0">
-                <Image
-                  src={item.personAvatar}
-                  alt={item.personName || 'User'}
-                  fill
-                  className="object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-white" />
-              </div>
-            ) : item.additionalPersonCount ? (
-              <div className="flex -space-x-2 items-center">
-                <div className="h-6 w-6 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 flex items-center justify-center ring-2 ring-white">
-                  +{item.additionalPersonCount}
-                </div>
-              </div>
-            ) : item.iconType === 'calendar' ? (
-              <div className="h-7 w-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center ring-1 ring-blue-100">
-                <CalendarIcon className="h-3.5 w-3.5" />
-              </div>
-            ) : item.iconType === 'task' ? (
-              <div className="h-7 w-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center ring-1 ring-indigo-100">
-                <CheckSquare className="h-3.5 w-3.5" />
-              </div>
-            ) : (
-              <div className="h-7 w-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center ring-1 ring-slate-200">
-                <Sparkles className="h-3.5 w-3.5" />
-              </div>
-            )}
-          </div>
-
-          {/* Arrow / Expand icon */}
-          <div className="text-slate-400 group-hover:text-slate-700 transition-colors">
+          {/* Arrow Affordance */}
+          <div className="h-8 w-8 rounded-full bg-slate-50 group-hover:bg-indigo-50 border border-slate-200/60 group-hover:border-indigo-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-indigo-600" />
+              <ChevronDown className="h-4 w-4" />
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
@@ -219,10 +136,10 @@ export const ChangeRow: React.FC<ChangeRowProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-            className="border-t border-slate-100/90 bg-gradient-to-b from-slate-50/50 to-indigo-50/20"
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="border-t border-slate-100 bg-slate-50/60"
           >
-            <div className="p-4 sm:p-5 space-y-4 text-xs">
+            <div className="p-4 sm:p-5 space-y-3.5 text-xs">
               {/* WHAT CHANGED */}
               <div className="space-y-1">
                 <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
@@ -234,38 +151,18 @@ export const ChangeRow: React.FC<ChangeRowProps> = ({
               </div>
 
               {/* WHY IT MATTERS */}
-              <div className="space-y-1 bg-white/90 rounded-xl p-3.5 border border-indigo-100/80 shadow-[0_1px_2px_rgba(79,70,229,0.03)]">
+              <div className="space-y-1 bg-white rounded-xl p-3.5 border border-indigo-100/90 shadow-2xs">
                 <div className="text-[10px] font-bold tracking-wider text-indigo-600 uppercase flex items-center gap-1.5">
                   <Sparkles className="h-3 w-3" />
                   WHY IT MATTERS
                 </div>
-                <p className="text-slate-700 text-[13px] leading-relaxed font-normal">
+                <p className="text-slate-700 text-[12.5px] leading-relaxed font-normal">
                   {item.whyItMatters}
                 </p>
               </div>
 
-              {/* RELATED CONTEXT BADGES */}
-              {item.relatedContext && item.relatedContext.length > 0 && (
-                <div className="space-y-1.5">
-                  <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                    RELATED CONTEXT
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {item.relatedContext.map((ctx, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-1.5 bg-white border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-700 text-xs shadow-2xs font-medium"
-                      >
-                        <SourceIcon type={ctx.sourceId} className="h-3 w-3" />
-                        <span className="truncate max-w-[200px]">{ctx.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* WHAT YOU CAN DO / ACTIONS */}
-              <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/50">
+              {/* ACTIONS */}
+              <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/60">
                 <div className="flex items-center gap-2">
                   {item.recommendedAction && (
                     <button
@@ -291,7 +188,6 @@ export const ChangeRow: React.FC<ChangeRowProps> = ({
                   </button>
                 </div>
 
-                {/* ASK NEXORBIT TRIGGER */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

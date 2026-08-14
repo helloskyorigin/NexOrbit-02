@@ -1,20 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, RotateCw, Flag, MoreHorizontal } from 'lucide-react';
-import { DailyPlanItem, CleanMyDayTab } from './types';
+import { Sparkles, RotateCw, Flag, Check } from 'lucide-react';
+import { DailyPlanItem } from './types';
 import { INITIAL_TODAY_PLAN_ITEMS } from './mockData';
 import { PlanSummaryCard } from './AIBrief';
-import { DailyPlanTabs } from './DailyPlanTabs';
 import { TaskRow } from './TaskRow';
-import { DayOverview } from './DayOverview';
-import { FocusSuggestionCard } from './FocusSuggestionCard';
-import { AIInsights } from './AIInsights';
-import { AIAssistantCard } from './AIAssistantCard';
 import { TaskActionModal } from './TaskActionModal';
-import { TimeBlocksView } from './TimeBlocksView';
-import { TasksListView } from './TasksListView';
-import { FocusTimeView } from './FocusTimeView';
 import { useToast } from '../ui/Toast';
 import { cn } from '../../lib/utils';
 
@@ -30,17 +22,11 @@ export const CleanMyDayView: React.FC<CleanMyDayViewProps> = ({
   const { addToast } = useToast();
 
   // State
-  const [activeTab, setActiveTab] = useState<CleanMyDayTab>('plan');
-  const [showCompleted, setShowCompleted] = useState<boolean>(true);
   const [planItems, setPlanItems] = useState<DailyPlanItem[]>(INITIAL_TODAY_PLAN_ITEMS);
   const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
   const [selectedTaskItem, setSelectedTaskItem] = useState<DailyPlanItem | null>(null);
 
-  // Derived Statistics
-  const totalItemsCount = planItems.length;
-  const completedCount = planItems.filter((item) => item.isCompleted).length;
-  const pendingCount = totalItemsCount - completedCount;
-
+  // Grouped Priorities
   const highPriorityItems = planItems.filter((item) => item.priority === 'high');
   const mediumPriorityItems = planItems.filter((item) => item.priority === 'medium');
   const lowPriorityItems = planItems.filter((item) => item.priority === 'low');
@@ -69,20 +55,13 @@ export const CleanMyDayView: React.FC<CleanMyDayViewProps> = ({
     setIsRegenerating(true);
     setTimeout(() => {
       setIsRegenerating(false);
+      setPlanItems(INITIAL_TODAY_PLAN_ITEMS.map((item) => ({ ...item, isCompleted: false })));
       addToast({
         title: 'Plan Regenerated',
-        description: 'NEXORBIT recalculated priorities based on latest calendar and email activity.',
+        description: 'NEXORBIT recalculated priorities based on your connected calendar, emails, and drive files.',
         type: 'success',
       });
-    }, 800);
-  };
-
-  const handleScheduleFocus = () => {
-    addToast({
-      title: 'Focus Block Reserved',
-      description: 'Scheduled 2:00 PM – 4:00 PM deep work time on Google Calendar.',
-      type: 'success',
-    });
+    }, 700);
   };
 
   const handleAskNexorbit = (query?: string) => {
@@ -91,199 +70,168 @@ export const CleanMyDayView: React.FC<CleanMyDayViewProps> = ({
     }
   };
 
-  return (
-    <div className={cn('space-y-6 pb-12 antialiased', className)}>
-      {/* ========================================================================= */}
-      {/* HEADER                                                                    */}
-      {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Clean My Day</span>
-            <Sparkles className="h-5 w-5 text-blue-500 fill-blue-500/10" />
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Let NEXORBIT decide what matters today.
-          </p>
-        </div>
+  const hasItems = planItems.length > 0;
 
-        {/* Regenerate Plan Button */}
-        <div>
+  return (
+    <div
+      className={cn(
+        'min-h-screen bg-slate-50/50 pb-28 antialiased',
+        className
+      )}
+    >
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
+        {/* ========================================================================= */}
+        {/* HEADER                                                                    */}
+        {/* ========================================================================= */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              <span>Clean My Day</span>
+              <Sparkles className="h-5 w-5 text-indigo-600 fill-indigo-600/10" />
+            </h1>
+            <p className="text-xs text-slate-500 font-medium mt-1">
+              Let NEXORBIT decide what matters today.
+            </p>
+          </div>
+
+          {/* Regenerate Plan Button */}
           <button
             onClick={handleRegeneratePlan}
             disabled={isRegenerating}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 text-xs sm:text-sm font-semibold text-slate-700 transition-all shadow-2xs hover:border-slate-300 cursor-pointer active:scale-95 disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 transition-all shadow-2xs hover:border-slate-300 cursor-pointer disabled:opacity-60 shrink-0 self-start sm:self-center"
           >
-            <RotateCw className={cn('h-4 w-4 text-blue-600', isRegenerating && 'animate-spin')} />
+            <RotateCw className={cn('h-3.5 w-3.5 text-indigo-600', isRegenerating && 'animate-spin')} />
             <span>{isRegenerating ? 'Calculating...' : 'Regenerate Plan'}</span>
           </button>
         </div>
-      </div>
 
-      {/* ========================================================================= */}
-      {/* AI PLAN SUMMARY CARD                                                     */}
-      {/* ========================================================================= */}
-      <PlanSummaryCard
-        totalItems={totalItemsCount}
-        completedItems={completedCount}
-        pendingItems={pendingCount}
-      />
+        {/* ========================================================================= */}
+        {/* MAIN AI SUMMARY CARD                                                     */}
+        {/* ========================================================================= */}
+        <PlanSummaryCard />
 
-      {/* ========================================================================= */}
-      {/* PLAN TABS & SHOW COMPLETED TOGGLE                                         */}
-      {/* ========================================================================= */}
-      <DailyPlanTabs
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        showCompleted={showCompleted}
-        onToggleShowCompleted={setShowCompleted}
-      />
-
-      {/* ========================================================================= */}
-      {/* MAIN WORKSPACE GRID (LEFT 8 COLS, RIGHT 4 COLS)                           */}
-      {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
-          {activeTab === 'plan' && (
-            <div className="space-y-6">
-              {/* HIGH PRIORITY SECTION */}
-              {highPriorityItems.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-xs font-semibold text-rose-600 px-1 pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <Flag className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
-                      <span className="text-sm font-bold text-slate-900">High Priority</span>
-                    </div>
-                    <button className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors cursor-pointer">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {highPriorityItems
-                      .filter((item) => showCompleted || !item.isCompleted)
-                      .map((item) => (
-                        <TaskRow
-                          key={item.id}
-                          item={item}
-                          onActionClick={(selected) => setSelectedTaskItem(selected)}
-                          onCompleteToggle={handleToggleComplete}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* MEDIUM PRIORITY SECTION */}
-              {mediumPriorityItems.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-xs font-semibold text-amber-600 px-1 pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <Flag className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                      <span className="text-sm font-bold text-slate-900">Medium Priority</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {mediumPriorityItems
-                      .filter((item) => showCompleted || !item.isCompleted)
-                      .map((item) => (
-                        <TaskRow
-                          key={item.id}
-                          item={item}
-                          onActionClick={(selected) => setSelectedTaskItem(selected)}
-                          onCompleteToggle={handleToggleComplete}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* LOW PRIORITY SECTION */}
-              {lowPriorityItems.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-xs font-semibold text-emerald-600 px-1 pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <Flag className="h-3.5 w-3.5 fill-emerald-500 text-emerald-500" />
-                      <span className="text-sm font-bold text-slate-900">Low Priority</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {lowPriorityItems
-                      .filter((item) => showCompleted || !item.isCompleted)
-                      .map((item) => (
-                        <TaskRow
-                          key={item.id}
-                          item={item}
-                          onActionClick={(selected) => setSelectedTaskItem(selected)}
-                          onCompleteToggle={handleToggleComplete}
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
+        {/* ========================================================================= */}
+        {/* MAIN PLAN LIST                                                            */}
+        {/* ========================================================================= */}
+        {!hasItems ? (
+          /* EMPTY STATE */
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-2xs space-y-3">
+            <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <Check className="h-6 w-6" />
             </div>
-          )}
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-slate-900">You’re clear for today.</h3>
+              <p className="text-xs text-slate-500">
+                NEXORBIT couldn’t find anything that needs your attention right now.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* HIGH PRIORITY */}
+            {highPriorityItems.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 px-1">
+                  <Flag className="h-3.5 w-3.5 fill-rose-600 text-rose-600" />
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    High Priority
+                  </span>
+                  <div className="h-[1px] flex-1 bg-slate-200/70" />
+                </div>
 
-          {activeTab === 'schedule' && (
-            <TimeBlocksView
-              items={planItems}
-              onSelectItem={(item) => setSelectedTaskItem(item)}
-            />
-          )}
+                <div className="space-y-2">
+                  {highPriorityItems.map((item) => (
+                    <TaskRow
+                      key={item.id}
+                      item={item}
+                      onActionClick={(selected) => setSelectedTaskItem(selected)}
+                      onCompleteToggle={handleToggleComplete}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {activeTab === 'tasks' && (
-            <TasksListView
-              items={planItems}
-              onSelectItem={(item) => setSelectedTaskItem(item)}
-              onToggleComplete={handleToggleComplete}
-            />
-          )}
+            {/* MEDIUM PRIORITY */}
+            {mediumPriorityItems.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 px-1">
+                  <Flag className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Medium Priority
+                  </span>
+                  <div className="h-[1px] flex-1 bg-slate-200/70" />
+                </div>
 
-          {activeTab === 'focus' && (
-            <FocusTimeView
-              onScheduleWindow={(win) =>
-                addToast({
-                  title: 'Focus Window Protected',
-                  description: `Reserved ${win} block on Google Calendar.`,
-                  type: 'success',
-                })
-              }
-            />
-          )}
-        </div>
+                <div className="space-y-2">
+                  {mediumPriorityItems.map((item) => (
+                    <TaskRow
+                      key={item.id}
+                      item={item}
+                      onActionClick={(selected) => setSelectedTaskItem(selected)}
+                      onCompleteToggle={handleToggleComplete}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Right Sidebar Column (4 cols) */}
-        <div className="lg:col-span-4 space-y-5">
-          {/* 1. Day Overview */}
-          <DayOverview
-            totalItems={totalItemsCount}
-            highCount={highPriorityItems.length}
-            mediumCount={mediumPriorityItems.length}
-            lowCount={lowPriorityItems.length}
-            doneCount={completedCount}
-            dateString="May 11, 2024"
-          />
+            {/* LOW PRIORITY */}
+            {lowPriorityItems.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2 px-1">
+                  <Flag className="h-3.5 w-3.5 fill-emerald-500 text-emerald-500" />
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Low Priority
+                  </span>
+                  <div className="h-[1px] flex-1 bg-slate-200/70" />
+                </div>
 
-          {/* 2. Focus Time */}
-          <FocusSuggestionCard
-            timeWindow="2:00 PM – 4:00 PM"
-            description="Deep work time for important tasks."
-            onScheduleFocusTime={handleScheduleFocus}
-          />
+                <div className="space-y-2">
+                  {lowPriorityItems.map((item) => (
+                    <TaskRow
+                      key={item.id}
+                      item={item}
+                      onActionClick={(selected) => setSelectedTaskItem(selected)}
+                      onCompleteToggle={handleToggleComplete}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* 3. AI Insights */}
-          <AIInsights />
+            {/* ========================================================================= */}
+            {/* SUBTLE BOTTOM AI RECOMMENDATION                                           */}
+            {/* ========================================================================= */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-indigo-100/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-bold tracking-wider text-indigo-600 uppercase">
+                    AI Recommendation
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 font-medium mt-0.5 leading-relaxed">
+                    You have a deadline conflict today. Resolve this before your afternoon meetings.
+                  </p>
+                </div>
+              </div>
 
-          {/* 4. AI Assistant Entry Point */}
-          <AIAssistantCard onAskNexorbit={() => handleAskNexorbit()} />
-        </div>
+              <button
+                onClick={() => handleAskNexorbit('How should I resolve today\'s deadline conflict?')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 text-xs font-semibold border border-indigo-200/60 transition-colors cursor-pointer shrink-0 self-start sm:self-center"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                <span>Ask NEXORBIT</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
-      {/* TASK DETAIL / ACTION DIALOG                                               */}
+      {/* TASK DETAIL / ACTION MODAL                                                */}
       {/* ========================================================================= */}
       <TaskActionModal
         item={selectedTaskItem}
@@ -294,3 +242,4 @@ export const CleanMyDayView: React.FC<CleanMyDayViewProps> = ({
     </div>
   );
 };
+

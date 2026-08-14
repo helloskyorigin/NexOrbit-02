@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, ArrowUpRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface ConnectionHealthCardProps {
@@ -14,37 +14,32 @@ export const ConnectionHealthCard: React.FC<ConnectionHealthCardProps> = ({
   className,
 }) => {
   return (
-    <div className={cn('p-6 rounded-3xl bg-white border border-slate-200/80 shadow-2xs space-y-4 text-center', className)}>
-      <div className="flex items-center justify-between text-left">
-        <h3 className="text-base font-bold text-slate-900 font-sans">
+    <div className={cn('p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-3', className)}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-bold text-slate-900 tracking-wider uppercase font-sans">
           Connection Health
         </h3>
-      </div>
-
-      <div className="py-2 space-y-3">
-        <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
-          <CheckCircle2 className="h-6 w-6" />
-        </div>
-
-        <div className="space-y-0.5">
-          <h4 className="text-sm font-bold text-slate-900">
-            All systems operational
-          </h4>
-          <p className="text-xs text-slate-400 font-normal">
-            Last checked just now
-          </p>
-        </div>
-      </div>
-
-      <div className="pt-2 border-t border-slate-100 text-left">
         <button
           onClick={onViewStatus}
-          className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 transition-colors cursor-pointer"
+          className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-0.5 transition-colors cursor-pointer"
         >
           <span>View status</span>
-          <ExternalLink className="h-3 w-3" />
+          <ArrowUpRight className="h-3 w-3" />
         </button>
+      </div>
+
+      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100/80">
+        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+        <div>
+          <div className="text-xs font-bold text-emerald-950 leading-none">
+            All systems operational
+          </div>
+          <div className="text-[11px] text-emerald-700 font-medium mt-0.5">
+            Last checked just now
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+

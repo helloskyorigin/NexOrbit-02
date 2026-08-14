@@ -5,6 +5,7 @@ import { User, Settings, Zap, LogOut, ChevronDown } from 'lucide-react';
 import { Dropdown, DropdownItem } from '../ui/Dropdown';
 import { Avatar } from '../ui/Avatar';
 import { useToast } from '../ui/Toast';
+import { useAuth } from '../auth/AuthContext';
 
 export interface UserProfileDropdownProps {
   onNavigate?: (pageId: string) => void;
@@ -16,12 +17,16 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   className,
 }) => {
   const { addToast } = useToast();
+  const { user, signOut } = useAuth();
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'User';
+  const displayPlan = user?.plan || 'Free Plan';
 
   const handleProfileClick = () => {
     addToast({
       type: 'info',
-      title: 'Satyam',
-      description: 'Free Plan • Satyam@nexorbit.ai',
+      title: displayName,
+      description: `${displayPlan} • ${user?.email || 'user@nexorbit.ai'}`,
     });
   };
 
@@ -40,10 +45,11 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
   };
 
   const handleSignOutClick = () => {
+    signOut();
     addToast({
       type: 'info',
-      title: 'Sign Out',
-      description: 'Authentication simulation: Signed out session.',
+      title: 'Signed Out',
+      description: 'You have been signed out of NEXOrbit.',
     });
   };
 
@@ -77,12 +83,12 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
 
   const triggerNode = (
     <div className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group select-none">
-      <Avatar name="Satyam" size="sm" status="online" />
+      <Avatar name={displayName} src={user?.photoURL} size="sm" status="online" />
       <div className="text-left hidden sm:block">
         <div className="text-xs font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-          Satyam
+          {displayName}
         </div>
-        <div className="text-[10px] font-medium text-slate-400">Free Plan</div>
+        <div className="text-[10px] font-medium text-slate-400">{displayPlan}</div>
       </div>
       <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 transition-colors ml-0.5" />
     </div>
@@ -90,3 +96,4 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
 
   return <Dropdown trigger={triggerNode} items={menuItems} align="right" className={className} />;
 };
+

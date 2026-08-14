@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Clock, ArrowRight, Inbox, RotateCcw } from 'lucide-react';
+import { Clock, Inbox, RotateCcw } from 'lucide-react';
 import { MemoryItem } from './types';
 import { MemoryCard } from './MemoryCard';
 
@@ -21,13 +21,13 @@ export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({
   if (memories.length === 0) {
     return (
       <div className="p-8 sm:p-12 rounded-2xl bg-white border border-slate-200/80 text-center space-y-4 shadow-2xs">
-        <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100/60">
+        <div className="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto border border-indigo-100/60">
           <Inbox className="h-6 w-6" />
         </div>
         <div className="space-y-1">
-          <h3 className="text-sm font-bold text-slate-900">NEXORBIT hasn&apos;t learned anything yet.</h3>
+          <h3 className="text-sm font-bold text-slate-900">No memories found.</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Memories you choose to keep will appear here. Try clearing active filters or searching for another term.
+            NexOrbit couldn’t find any remembered information matching your search or active filter.
           </p>
         </div>
         {onResetFilters && (
@@ -36,7 +36,7 @@ export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            <span>Reset Search &amp; Filters</span>
+            <span>Reset Filters</span>
           </button>
         )}
       </div>
@@ -44,17 +44,20 @@ export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+    <div className="space-y-3">
       {/* Section Header */}
-      <div className="flex items-center justify-between pb-1">
-        <h3 className="text-xs sm:text-sm font-semibold text-slate-900 tracking-tight flex items-center gap-2">
-          <Clock className="h-4 w-4 text-slate-400" />
+      <div className="flex items-center justify-between px-1">
+        <h3 className="text-xs font-bold text-slate-900 tracking-wider uppercase flex items-center gap-2">
+          <Clock className="h-3.5 w-3.5 text-slate-400" />
           <span>Recent Memories</span>
         </h3>
+        <span className="text-[11px] font-semibold text-slate-400">
+          {memories.length} {memories.length === 1 ? 'item' : 'items'}
+        </span>
       </div>
 
-      {/* Memory Cards List */}
-      <div className="space-y-3">
+      {/* Memory Rows List */}
+      <div className="space-y-2">
         {memories.map((mem) => (
           <MemoryCard
             key={mem.id}
@@ -64,19 +67,7 @@ export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({
           />
         ))}
       </div>
-
-      {/* Footer Link */}
-      <div className="pt-2 text-center">
-        <button
-          onClick={() => {
-            if (onResetFilters) onResetFilters();
-          }}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
-        >
-          <span>View all memories</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
     </div>
   );
 };
+

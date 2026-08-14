@@ -13,6 +13,9 @@ import { ConnectedAppsView } from '../connectors/ConnectedAppsView';
 import { WhatChangedView } from '../changes/WhatChangedView';
 import { CleanMyDayView } from '../focus/CleanMyDayView';
 import { SettingsView } from '../settings/SettingsView';
+import { useAuth } from '../auth/AuthContext';
+import { AuthContainer } from '../auth/AuthContainer';
+import { AuthLoading } from '../auth/AuthLoading';
 import { Palette } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { cn } from '../../lib/utils';
@@ -28,6 +31,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   children,
   showDevTabOption = false,
 }) => {
+  const { isAuthenticated } = useAuth();
   const [activePage, setActivePage] = useState<string>(initialPage);
   const [activeConnectorId, setActiveConnectorId] = useState<ConnectorId | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
@@ -54,6 +58,12 @@ export const AppShell: React.FC<AppShellProps> = ({
       }
     }
   }, []);
+
+  // If user is not authenticated, render the Auth UI view
+  if (!isAuthenticated) {
+    return <AuthContainer />;
+  }
+
 
   const handleSelectPage = (pageId: string) => {
     const normalizedPage = pageId === 'ask' || pageId === 'ask-my-world' ? 'chat' : pageId;

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mail, Calendar, FileText, CheckSquare, AtSign } from 'lucide-react';
+import { Mail, Calendar, FileText } from 'lucide-react';
 import { CategoryFilter } from './types';
 import { cn } from '../../lib/utils';
 
@@ -18,12 +18,10 @@ interface TabOption {
 }
 
 const TABS: TabOption[] = [
-  { id: 'all', label: 'All Changes' },
+  { id: 'all', label: 'All' },
   { id: 'messages', label: 'Messages', icon: Mail },
   { id: 'calendar', label: 'Calendar', icon: Calendar },
-  { id: 'documents', label: 'Documents', icon: FileText },
-  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-  { id: 'mentions', label: 'Mentions', icon: AtSign },
+  { id: 'files', label: 'Files', icon: FileText },
 ];
 
 export const CategoryFilterTabs: React.FC<CategoryFilterTabsProps> = ({

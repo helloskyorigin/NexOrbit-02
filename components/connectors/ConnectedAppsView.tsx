@@ -12,7 +12,7 @@ import { TrustMessage } from './TrustMessage';
 import { ConnectModal } from './ConnectModal';
 import { ConnectorDetail } from './ConnectorDetail';
 import { DisconnectModal } from './DisconnectModal';
-import { ChevronDown, ChevronUp, Plus, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '../ui/Toast';
 
 export interface ConnectedAppsViewProps {
@@ -116,14 +116,6 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
     );
   };
 
-  const handleOpenNotifications = () => {
-    addToast({
-      type: 'info',
-      title: 'Connector Health Status',
-      description: 'All 5 active connector sync pipelines are operational and healthy.',
-    });
-  };
-
   const handleConnectNewAppClick = () => {
     const disconnected = connectors.find((c) => c.status === 'not_connected');
     if (disconnected) {
@@ -144,63 +136,34 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
   const disconnectedAppsList = connectors.filter((c) => c.status === 'not_connected');
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-12">
-      {/* Page Header */}
-      <ConnectedAppsHeader onOpenNotifications={handleOpenNotifications} />
+    <div className="min-h-screen bg-slate-50/50 pb-28 antialiased">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
+        {/* Page Header */}
+        <ConnectedAppsHeader onConnectNewApp={handleConnectNewAppClick} />
 
-      {/* Top Overview Hero Banner */}
-      <ConnectionOverview
-        connectors={connectors}
-        onConnectNewApp={handleConnectNewAppClick}
-      />
+        {/* Compact Connection Overview */}
+        <ConnectionOverview
+          connectors={connectors}
+          onConnectNewApp={handleConnectNewAppClick}
+        />
 
-      {/* Main Two-Column Layout (Matching Reference Image) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (Connected & Available Apps) - 8 cols */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Your Connected Apps Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-base font-bold text-slate-900 font-sans">
-                Your Connected Apps
-              </h2>
-              <span className="text-xs text-slate-400 font-medium">
-                {connectedAppsList.length} connected
-              </span>
-            </div>
-
-            <div className="space-y-2.5">
-              {connectedAppsList.map((connector) => (
-                <ConnectorCard
-                  key={connector.id}
-                  connector={connector}
-                  onConnect={(conn) => setSelectedToConnect(conn)}
-                  onManage={(conn) => setSelectedToManage(conn)}
-                />
-              ))}
-
-              {connectedAppsList.length === 0 && (
-                <div className="p-8 text-center rounded-2xl bg-white border border-slate-200/80 text-slate-500 text-xs">
-                  No connected apps yet. Click below to connect your tools.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Available Apps Section */}
-          {(disconnectedAppsList.length > 0 || availableConnectors.length > 0) && (
-            <div className="space-y-3 pt-2">
+        {/* Main Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column (Connected & Available Apps) - 8 cols */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Your Connected Apps Section */}
+            <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-base font-bold text-slate-900 font-sans">
-                  Available Apps
+                <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
+                  Your Connected Apps
                 </h2>
-                <span className="text-xs text-slate-400 font-medium">
-                  {disconnectedAppsList.length + availableConnectors.length} available
+                <span className="text-xs font-semibold text-slate-400">
+                  {connectedAppsList.length} connected
                 </span>
               </div>
 
-              <div className="space-y-2.5">
-                {disconnectedAppsList.map((connector) => (
+              <div className="space-y-2">
+                {connectedAppsList.map((connector) => (
                   <ConnectorCard
                     key={connector.id}
                     connector={connector}
@@ -209,57 +172,88 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
                   />
                 ))}
 
-                {(showAllAvailable ? availableConnectors : availableConnectors.slice(0, 2)).map((connector) => (
-                  <ConnectorCard
-                    key={connector.id}
-                    connector={connector}
-                    onConnect={(conn) => setSelectedToConnect(conn)}
-                    onManage={(conn) => setSelectedToManage(conn)}
-                  />
-                ))}
+                {connectedAppsList.length === 0 && (
+                  <div className="p-8 text-center rounded-2xl bg-white border border-slate-200/80 text-slate-500 text-xs">
+                    No connected apps yet. Click below to connect your tools.
+                  </div>
+                )}
               </div>
-
-              {availableConnectors.length > 2 && (
-                <div className="text-center pt-2">
-                  <button
-                    onClick={() => setShowAllAvailable(!showAllAvailable)}
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1 bg-white border border-slate-200/80 px-4 py-2 rounded-xl transition-colors shadow-2xs cursor-pointer"
-                  >
-                    <span>{showAllAvailable ? 'Show fewer apps' : 'View all apps'}</span>
-                    {showAllAvailable ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Trust Disclaimer */}
-          <TrustMessage />
-        </div>
+            {/* Available Apps Section */}
+            {(disconnectedAppsList.length > 0 || availableConnectors.length > 0) && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between px-1">
+                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
+                    Available Apps
+                  </h2>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {disconnectedAppsList.length + availableConnectors.length} available
+                  </span>
+                </div>
 
-        {/* Right Column (Info & Status Cards) - 4 cols */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* About Connected Apps Card */}
-          <AboutConnectedAppsCard
-            onLearnMorePrivacy={() => {
-              addToast({
-                type: 'info',
-                title: 'Data Privacy Standard',
-                description: 'NEXORBIT uses AES-256 encryption, zero third-party AI training, and full client data isolation.',
-              });
-            }}
-          />
+                <div className="space-y-2">
+                  {disconnectedAppsList.map((connector) => (
+                    <ConnectorCard
+                      key={connector.id}
+                      connector={connector}
+                      onConnect={(conn) => setSelectedToConnect(conn)}
+                      onManage={(conn) => setSelectedToManage(conn)}
+                    />
+                  ))}
 
-          {/* Connection Health Card */}
-          <ConnectionHealthCard
-            onViewStatus={() => {
-              addToast({
-                type: 'success',
-                title: 'System Diagnostics',
-                description: 'All 5 connector sync endpoints are operating with 100% health & zero rate-limit errors.',
-              });
-            }}
-          />
+                  {(showAllAvailable ? availableConnectors : availableConnectors.slice(0, 2)).map((connector) => (
+                    <ConnectorCard
+                      key={connector.id}
+                      connector={connector}
+                      onConnect={(conn) => setSelectedToConnect(conn)}
+                      onManage={(conn) => setSelectedToManage(conn)}
+                    />
+                  ))}
+                </div>
+
+                {availableConnectors.length > 2 && (
+                  <div className="text-center pt-1">
+                    <button
+                      onClick={() => setShowAllAvailable(!showAllAvailable)}
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1 bg-white border border-slate-200/80 px-3.5 py-1.5 rounded-xl transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <span>{showAllAvailable ? 'Show fewer apps' : 'View all apps'}</span>
+                      {showAllAvailable ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Security / Privacy Trust Disclaimer */}
+            <TrustMessage />
+          </div>
+
+          {/* Right Column (Info & Status Cards) - 4 cols */}
+          <div className="lg:col-span-4 space-y-4">
+            {/* About Connected Apps Card */}
+            <AboutConnectedAppsCard
+              onLearnMorePrivacy={() => {
+                addToast({
+                  type: 'info',
+                  title: 'Data Privacy Standard',
+                  description: 'NexOrbit uses AES-256 encryption, zero third-party AI training, and full client data isolation.',
+                });
+              }}
+            />
+
+            {/* Connection Health Card */}
+            <ConnectionHealthCard
+              onViewStatus={() => {
+                addToast({
+                  type: 'success',
+                  title: 'System Diagnostics',
+                  description: 'All 5 connector sync endpoints are operating with 100% health & zero rate-limit errors.',
+                });
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -293,3 +287,4 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
     </div>
   );
 };
+

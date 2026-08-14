@@ -12,14 +12,15 @@ export const TrustMessage: React.FC<TrustMessageProps> = ({ className }) => {
   return (
     <div
       className={cn(
-        'p-4 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center gap-3 text-xs text-slate-500 font-medium',
+        'p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3 text-xs text-slate-600 font-medium',
         className
       )}
     >
       <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
       <span>
-        Your connections stay under your control. NEXORBIT only uses connected services according to the permissions you approve.
+        Your connections stay under your control. NexOrbit only uses connected services according to the permissions you explicitly approve.
       </span>
     </div>
   );
 };
+

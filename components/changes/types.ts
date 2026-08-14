@@ -6,9 +6,7 @@ export type CategoryFilter =
   | 'all' 
   | 'messages' 
   | 'calendar' 
-  | 'documents' 
-  | 'tasks' 
-  | 'mentions';
+  | 'files';
 
 export type ConnectorSourceId = 
   | 'gmail' 

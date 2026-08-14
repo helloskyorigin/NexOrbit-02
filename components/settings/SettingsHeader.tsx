@@ -25,29 +25,29 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
     addToast({
       type: 'info',
       title: 'Search Settings',
-      description: 'Type to filter preferences or navigate sections.',
+      description: 'Type to search or filter NexOrbit workspace settings.',
     });
   };
 
   const initialLetter = user.name ? user.name.charAt(0).toUpperCase() : 'S';
 
   return (
-    <div className={cn('flex items-center justify-between gap-4 pb-4 pt-1', className)}>
-      <div className="space-y-0.5">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-sans">
+    <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80', className)}>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">
           Settings
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 font-normal">
+        <p className="text-xs text-slate-500 font-medium mt-1">
           Manage your preferences and control your experience.
         </p>
       </div>
 
-      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
         {/* Search button */}
         <button
           onClick={handleSearchClick}
           aria-label="Search settings"
-          className="h-9 w-9 rounded-full bg-white border border-slate-200/80 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-2xs cursor-pointer"
+          className="h-9 w-9 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-2xs cursor-pointer"
         >
           <Search className="h-4 w-4" />
         </button>
@@ -56,7 +56,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
         <button
           onClick={onOpenNotifications}
           aria-label="Notifications"
-          className="h-9 w-9 rounded-full bg-white border border-slate-200/80 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-2xs cursor-pointer relative"
+          className="h-9 w-9 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-2xs cursor-pointer relative"
         >
           <Bell className="h-4 w-4" />
         </button>
@@ -65,7 +65,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
         <button
           onClick={onEditProfile}
           title="Edit Profile"
-          className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shadow-2xs select-none hover:bg-blue-700 transition-colors cursor-pointer"
+          className="h-9 w-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-xs font-bold shadow-2xs select-none transition-colors cursor-pointer"
         >
           {initialLetter}
         </button>
@@ -73,3 +73,4 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({
     </div>
   );
 };
+

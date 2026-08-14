@@ -11,15 +11,14 @@ import { ForgetMemoryModal } from './ForgetMemoryModal';
 import { INITIAL_MEMORIES } from './mockData';
 import { MemoryItem } from './types';
 import { useToast } from '../ui/Toast';
+import { cn } from '../../lib/utils';
 
 export const MemoryView: React.FC = () => {
   const { addToast } = useToast();
 
   // Primary state
   const [memories, setMemories] = useState<MemoryItem[]>(INITIAL_MEMORIES);
-  const [selectedMemory, setSelectedMemory] = useState<MemoryItem | null>(
-    INITIAL_MEMORIES[0] || null
-  );
+  const [selectedMemory, setSelectedMemory] = useState<MemoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategoryTab, setActiveCategoryTab] = useState<CategoryTabOption>('All');
 
@@ -27,17 +26,6 @@ export const MemoryView: React.FC = () => {
   const [editingMemory, setEditingMemory] = useState<MemoryItem | null>(null);
   const [memoryToForget, setMemoryToForget] = useState<MemoryItem | null>(null);
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
-
-  // Compute stats dynamically
-  const memoryStats = useMemo(() => {
-    const total = memories.length;
-    const people = memories.filter((m) => m.category === 'People').length;
-    const projects = memories.filter((m) => m.category === 'Projects').length;
-    const preferences = memories.filter((m) => m.category === 'Preferences').length;
-    const knowledge = memories.filter((m) => m.category === 'Knowledge').length;
-
-    return { total, people, projects, preferences, knowledge };
-  }, [memories]);
 
   // Filter memories list based on category & search term
   const filteredMemories = useMemo(() => {
@@ -65,7 +53,11 @@ export const MemoryView: React.FC = () => {
 
   // Handlers
   const handleSelectMemory = (memory: MemoryItem) => {
-    setSelectedMemory(memory);
+    if (selectedMemory?.id === memory.id) {
+      setSelectedMemory(null);
+    } else {
+      setSelectedMemory(memory);
+    }
   };
 
   const handleEditMemory = (memory: MemoryItem) => {
@@ -94,14 +86,13 @@ export const MemoryView: React.FC = () => {
     setMemories((prev) => prev.filter((item) => item.id !== memory.id));
 
     if (selectedMemory?.id === memory.id) {
-      const remaining = memories.filter((item) => item.id !== memory.id);
-      setSelectedMemory(remaining[0] || null);
+      setSelectedMemory(null);
     }
 
     setMemoryToForget(null);
     addToast({
       title: 'Memory Forgotten',
-      description: `NEXORBIT will no longer use "${memory.title}".`,
+      description: `NexOrbit will no longer use "${memory.title}".`,
       type: 'info',
     });
   };
@@ -112,12 +103,6 @@ export const MemoryView: React.FC = () => {
     );
     if (found) {
       setSelectedMemory(found);
-    } else {
-      addToast({
-        title: 'Related Memory',
-        description: `Navigating to memory reference: ${relatedIdOrTitle}`,
-        type: 'info',
-      });
     }
   };
 
@@ -127,65 +112,52 @@ export const MemoryView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16 animate-in fade-in duration-300">
-      {/* Top Header */}
-      <MemoryHeader
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onOpenFilters={() => setIsFilterPopoverOpen(!isFilterPopoverOpen)}
-        isFiltersActive={searchTerm.length > 0 || activeCategoryTab !== 'All'}
-        onNavigateSettings={() => {
-          addToast({
-            title: 'Settings',
-            description: 'Opened NEXORBIT Memory settings.',
-            type: 'info',
-          });
-        }}
-      />
+    <div className="min-h-screen bg-slate-50/50 pb-28 antialiased">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
+        {/* Top Header */}
+        <MemoryHeader
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onOpenFilters={() => setIsFilterPopoverOpen(!isFilterPopoverOpen)}
+          isFiltersActive={searchTerm.length > 0 || activeCategoryTab !== 'All'}
+        />
 
-      {/* Category Tabs: All | People | Projects | Preferences | Knowledge | Decisions */}
-      <MemoryCategoryTabs
-        activeTab={activeCategoryTab}
-        onSelectTab={setActiveCategoryTab}
-      />
+        {/* Category Tabs: All | People | Projects | Preferences | Knowledge | Decisions */}
+        <MemoryCategoryTabs
+          activeTab={activeCategoryTab}
+          onSelectTab={setActiveCategoryTab}
+        />
 
-      {/* Memory Summary: "Memory at a glance" */}
-      <MemorySummary
-        totalMemories={128 + (memories.length - INITIAL_MEMORIES.length)}
-        peopleCount={32}
-        projectsCount={18}
-        preferencesCount={21}
-        knowledgeCount={57}
-        onViewConnections={() => {
-          addToast({
-            title: 'Memory Connections',
-            description: 'Viewing NEXORBIT synaptic memory network graph.',
-            type: 'info',
-          });
-        }}
-      />
+        {/* Single-line subtle summary count */}
+        <MemorySummary
+          totalCount={memories.length}
+          filteredCount={filteredMemories.length}
+        />
 
-      {/* Main Two Column Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left List (~7 cols) */}
-        <div className="lg:col-span-7">
-          <MemoryTimeline
-            memories={filteredMemories}
-            selectedMemory={selectedMemory}
-            onSelectMemory={handleSelectMemory}
-            onResetFilters={handleResetFilters}
-          />
-        </div>
+        {/* Dynamic Workspace Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main List Column */}
+          <div className={cn(selectedMemory ? 'lg:col-span-7' : 'lg:col-span-12', 'transition-all duration-200')}>
+            <MemoryTimeline
+              memories={filteredMemories}
+              selectedMemory={selectedMemory}
+              onSelectMemory={handleSelectMemory}
+              onResetFilters={handleResetFilters}
+            />
+          </div>
 
-        {/* Right Detail Panel (~5 cols) */}
-        <div className="lg:col-span-5 sticky top-6">
-          <MemoryDetailPanel
-            memory={selectedMemory}
-            onClose={() => setSelectedMemory(null)}
-            onEdit={handleEditMemory}
-            onForget={handleForgetMemory}
-            onSelectRelated={handleSelectRelated}
-          />
+          {/* Right Detail Inspector (Dismissible) */}
+          {selectedMemory && (
+            <div className="lg:col-span-5 sticky top-6">
+              <MemoryDetailPanel
+                memory={selectedMemory}
+                onClose={() => setSelectedMemory(null)}
+                onEdit={handleEditMemory}
+                onForget={handleForgetMemory}
+                onSelectRelated={handleSelectRelated}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -207,3 +179,4 @@ export const MemoryView: React.FC = () => {
     </div>
   );
 };
+

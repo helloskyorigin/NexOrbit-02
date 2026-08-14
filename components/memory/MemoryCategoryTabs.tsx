@@ -26,7 +26,7 @@ export const MemoryCategoryTabs: React.FC<MemoryCategoryTabsProps> = ({
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none">
+    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 scrollbar-none">
       {tabs.map((tab) => {
         const isSelected = activeTab === tab.id;
         const IconComponent = tab.icon;
@@ -36,13 +36,13 @@ export const MemoryCategoryTabs: React.FC<MemoryCategoryTabsProps> = ({
             key={tab.id}
             onClick={() => onSelectTab(tab.id)}
             className={cn(
-              'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer border',
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border select-none',
               isSelected
-                ? 'bg-blue-50/80 border-blue-500 text-blue-600 font-semibold shadow-2xs'
-                : 'bg-white border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-slate-900 border-slate-900 text-white shadow-2xs'
+                : 'bg-white border-slate-200/80 text-slate-600 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50'
             )}
           >
-            {tab.id !== 'All' && <IconComponent className="h-3.5 w-3.5 shrink-0" />}
+            <IconComponent className={cn('h-3.5 w-3.5 shrink-0', isSelected ? 'text-slate-200' : 'text-slate-400')} />
             <span>{tab.label}</span>
           </button>
         );
@@ -50,3 +50,4 @@ export const MemoryCategoryTabs: React.FC<MemoryCategoryTabsProps> = ({
     </div>
   );
 };
+
