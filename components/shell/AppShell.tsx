@@ -31,7 +31,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   children,
   showDevTabOption = false,
 }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authInitializing } = useAuth();
   const [activePage, setActivePage] = useState<string>(initialPage);
   const [activeConnectorId, setActiveConnectorId] = useState<ConnectorId | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
@@ -58,6 +58,11 @@ export const AppShell: React.FC<AppShellProps> = ({
       }
     }
   }, []);
+
+  // Show a clean loading state while auth state is being initialized/determined
+  if (authInitializing) {
+    return <AuthLoading />;
+  }
 
   // If user is not authenticated, render the Auth UI view
   if (!isAuthenticated) {

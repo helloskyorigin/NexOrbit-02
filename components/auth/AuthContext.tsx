@@ -7,14 +7,60 @@ import { Language, translations } from './translations';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedSession = localStorage.getItem('nexorbit_auth_session');
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          if (parsed && parsed.language) {
+            return parsed.language;
+          }
+        }
+        const savedLang = localStorage.getItem('nexorbit_lang') as Language;
+        if (savedLang === 'en' || savedLang === 'hi') {
+          return savedLang;
+        }
+      } catch (e) {}
+    }
+    return 'en';
+  });
+
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedSession = localStorage.getItem('nexorbit_auth_session');
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          if (parsed && parsed.uid) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+    }
+    return null;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedSession = localStorage.getItem('nexorbit_auth_session');
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          if (parsed && parsed.uid) {
+            return true;
+          }
+        }
+      } catch (e) {}
+    }
+    return false;
+  });
+
   const [authInitializing, setAuthInitializing] = useState<boolean>(true);
   const [authView, setAuthView] = useState<AuthView>('welcome');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string>('');
-  const [language, setLanguageState] = useState<Language>('en');
 
   const clearError = () => setError(null);
 
@@ -33,32 +79,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        // Read saved language preference
-        const savedLang = localStorage.getItem('nexorbit_lang') as Language;
-        if (savedLang === 'en' || savedLang === 'hi') {
-          setLanguageState(savedLang);
-        }
-
-        // Read saved auth session
-        const storedSession = localStorage.getItem('nexorbit_auth_session');
-        if (storedSession) {
-          const parsed = JSON.parse(storedSession);
-          if (parsed && parsed.uid) {
-            setUser(parsed);
-            setIsAuthenticated(true);
-            if (parsed.language) {
-              setLanguageState(parsed.language);
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Failed to initialize auth state:', e);
-    } finally {
+    const timer = setTimeout(() => {
       setAuthInitializing(false);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // MOCK GOOGLE SIGN IN
