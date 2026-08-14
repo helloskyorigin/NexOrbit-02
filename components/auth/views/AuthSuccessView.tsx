@@ -1,30 +1,25 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, Sparkles } from 'lucide-react';
-import { useAuth } from '../AuthContext';
+import { NexOrbitLogo } from '../NexOrbitLogo';
 
 export const AuthSuccessView: React.FC = () => {
-  const { user } = useAuth();
-
   return (
-    <div className="py-8 space-y-4 text-center">
-      <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-2xs mx-auto">
-        <CheckCircle2 className="h-8 w-8 text-emerald-600 animate-bounce" />
+    <div className="py-8 space-y-6 text-center animate-in fade-in zoom-in-95 duration-300">
+      <div className="flex items-center justify-center">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute -inset-3 rounded-full bg-slate-100 animate-pulse" />
+          <NexOrbitLogo variant="mark" size="xl" animated className="text-slate-900 relative z-10" />
+        </div>
       </div>
 
-      <div className="space-y-1">
-        <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-          Welcome back, {user?.displayName || 'User'}!
+      <div className="space-y-1.5 pt-2">
+        <h2 className="text-lg font-semibold text-slate-950 tracking-tight">
+          Almost there...
         </h2>
-        <p className="text-xs text-slate-500 font-medium">
-          Session verified. Launching NEXOrbit workspace...
+        <p className="text-sm text-slate-500 font-normal leading-relaxed">
+          Preparing your workspace...
         </p>
-      </div>
-
-      <div className="pt-2 flex items-center justify-center gap-2 text-xs font-semibold text-indigo-600">
-        <Sparkles className="h-4 w-4 animate-pulse" />
-        <span>Syncing context & memory store...</span>
       </div>
     </div>
   );
