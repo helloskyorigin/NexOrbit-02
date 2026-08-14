@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
-import { getAuth, Auth } from 'firebase-admin/auth';
+import { getAuth, Auth, DecodedIdToken } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { ErrorCode, NexorbitError } from '@/types/errors';
 
 let adminApp: App | null = null;
 
@@ -63,4 +64,20 @@ export async function verifyAuthToken(req: Request) {
     console.error('Failed to verify Firebase ID token:', error);
     return null;
   }
+}
+
+/**
+ * Server-side helper to require an authenticated user in protected API endpoints.
+ * Throws a NexorbitError with 401 status if authentication fails.
+ */
+export async function requireAuthenticatedUser(req: Request): Promise<DecodedIdToken> {
+  const decodedToken = await verifyAuthToken(req);
+  if (!decodedToken) {
+    throw new NexorbitError(
+      ErrorCode.UNAUTHORIZED,
+      'Authentication token is invalid or missing. Please log in.',
+      401
+    );
+  }
+  return decodedToken;
 }

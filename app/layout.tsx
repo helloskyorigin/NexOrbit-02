@@ -3,7 +3,7 @@ import './globals.css';
 import { ClientProviders } from '@/components/providers/ClientProviders';
 
 export const metadata: Metadata = {
-  title: 'NEXORBIT | AI Brain for the Digital World',
+  title: 'NexOrbit | AI Brain for the Digital World',
   description: 'Your AI Brain for the Digital World. Unified context, intelligence gateway, and secure action execution.',
 };
 

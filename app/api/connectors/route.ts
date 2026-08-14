@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ConnectorService } from '@/services/connectors/connector.service';
 import { handleApiError } from '@/lib/errors';
 import { SupportedConnectorType } from '@/config';
+import { requireAuthenticatedUser } from '@/lib/firebase-admin';
 
 const connectorService = new ConnectorService();
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'user_demo_phase0';
+    const decodedToken = await requireAuthenticatedUser(req);
+    const userId = decodedToken.uid;
 
     const statuses = await connectorService.getStatuses(userId);
 
@@ -26,8 +27,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const decodedToken = await requireAuthenticatedUser(req);
+    const userId = decodedToken.uid;
+
     const body = await req.json();
-    const userId = body.userId || 'user_demo_phase0';
     const connectorType = body.connectorType as SupportedConnectorType;
     const action = body.action || 'CONNECT';
 

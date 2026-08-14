@@ -3,14 +3,15 @@ import { CreditService } from '@/services/credits/credit.service';
 import { SubscriptionService } from '@/services/subscription/subscription.service';
 import { handleApiError } from '@/lib/errors';
 import { OperationType } from '@/config';
+import { requireAuthenticatedUser } from '@/lib/firebase-admin';
 
 const creditService = new CreditService();
 const subService = new SubscriptionService(creditService);
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'user_demo_phase0';
+    const decodedToken = await requireAuthenticatedUser(req);
+    const userId = decodedToken.uid;
 
     const balance = await creditService.getCreditBalance(userId);
     const sub = await subService.getSubscription(userId);
@@ -29,8 +30,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const decodedToken = await requireAuthenticatedUser(req);
+    const userId = decodedToken.uid;
+
     const body = await req.json();
-    const userId = body.userId || 'user_demo_phase0';
     const action = body.action || 'CONSUME';
     const operation = (body.operation || 'ASK_MY_WORLD') as OperationType;
 

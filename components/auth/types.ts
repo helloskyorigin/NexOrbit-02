@@ -22,12 +22,20 @@ export interface AuthUser {
   language?: Language;
   timezone?: string;
   isNewUser?: boolean;
+  provider?: string;
 }
 
 export interface AuthContextType {
   user: AuthUser | null;
+  currentUser: AuthUser | null;
+  uid: string | null;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+  provider: string | null;
   isAuthenticated: boolean;
   authInitializing: boolean;
+  authLoading: boolean;
   authView: AuthView;
   loading: boolean;
   error: string | null;

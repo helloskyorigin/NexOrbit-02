@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BrainContextService } from '@/services/brain/context.service';
 import { handleApiError } from '@/lib/errors';
+import { requireAuthenticatedUser } from '@/lib/firebase-admin';
 
 const brainService = new BrainContextService();
 
 export async function GET(req: NextRequest) {
   try {
+    const decodedToken = await requireAuthenticatedUser(req);
+    const userId = decodedToken.uid;
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId') || 'user_demo_phase0';
 
     const memories = await brainService.getMemories(userId);
     const contextResult = await brainService.retrieveContext({
@@ -32,8 +35,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const decodedToken = await requireAuthenticatedUser(req);
+    const userId = decodedToken.uid;
+
     const body = await req.json();
-    const userId = body.userId || 'user_demo_phase0';
 
     if (body.type === 'ADD_MEMORY') {
       const memory = await brainService.addMemory(userId, {
