@@ -9,7 +9,8 @@ import {
   ThumbsDown,
   ExternalLink,
   FileText,
-  FileSpreadsheet,
+  Globe,
+  Paperclip,
 } from 'lucide-react';
 import { ChatMessage, SourceReference } from './types';
 import { useToast } from '../ui/Toast';
@@ -27,15 +28,44 @@ export const UserMessage: React.FC<UserMessageProps> = ({
   return (
     <div className="flex items-start justify-end gap-3 w-full animate-fadeIn select-text">
       {/* Message bubble */}
-      <div className="max-w-[85%] sm:max-w-[75%] rounded-3xl rounded-tr-md bg-[#eef2ff]/90 border border-indigo-100/70 text-slate-900 px-5 py-3.5 shadow-3xs text-[14.5px] leading-relaxed">
-        <p className="whitespace-pre-wrap">{message.text}</p>
+      <div className="max-w-[85%] sm:max-w-[75%] rounded-3xl rounded-tr-xs bg-indigo-50/90 border border-indigo-100/80 text-slate-900 px-5 py-3.5 shadow-2xs text-[14.5px] leading-relaxed space-y-2">
+        {/* User Attached Files Preview */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 pb-1">
+            {message.attachments.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center gap-2 p-1.5 rounded-xl bg-white/90 border border-indigo-100 text-xs font-semibold text-slate-800 shadow-2xs"
+              >
+                {file.previewUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={file.previewUrl}
+                    alt={file.name}
+                    className="h-8 w-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                    <Paperclip className="h-4 w-4" />
+                  </div>
+                )}
+                <span className="max-w-[140px] truncate font-bold text-slate-900">
+                  {file.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
+
         <div className="mt-1 flex items-center justify-end text-[11px] text-slate-400 font-medium">
           <span>{message.timestamp}</span>
         </div>
       </div>
 
       {/* User Avatar */}
-      <div className="h-9 w-9 rounded-full bg-blue-600 text-white font-semibold text-sm flex items-center justify-center shrink-0 shadow-xs select-none">
+      <div className="h-9 w-9 rounded-full bg-indigo-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs select-none">
         {userInitial}
       </div>
     </div>
@@ -79,6 +109,9 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
     });
   };
 
+  const hasConnectedSources =
+    message.sourcesUsed && message.sourcesUsed.length > 0;
+
   return (
     <div className="flex items-start gap-3.5 w-full animate-fadeIn">
       {/* Planetary Orbital AI Icon */}
@@ -86,17 +119,36 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
         <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
           <Sparkles className="h-4 w-4 fill-white/20" />
         </div>
-        {/* Orbital Ring Simulation */}
         <div className="absolute -inset-1 rounded-full border border-indigo-300/40 pointer-events-none scale-110 -rotate-12" />
       </div>
 
       {/* AI Card Content */}
-      <div className="flex-1 min-w-0">
-        <div className="rounded-3xl bg-white border border-slate-200/70 shadow-[0_4px_20px_rgba(15,23,42,0.03)] p-5 sm:p-6 space-y-4 select-text">
+      <div className="flex-1 min-w-0 max-w-4xl">
+        <div className="rounded-3xl bg-white border border-slate-200/80 shadow-[0_4px_20px_rgba(15,23,42,0.03)] p-5 sm:p-6 space-y-4 select-text">
+          {/* Connected World Subtle Source Indicator */}
+          {hasConnectedSources && (
+            <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px] font-bold">
+                <Globe className="h-3 w-3 text-indigo-600 shrink-0" />
+                <span>NEXORBIT found this in your connected world</span>
+              </div>
+
+              {message.sourcesUsed!.map((src) => (
+                <button
+                  key={src.id}
+                  type="button"
+                  onClick={() => onOpenSource && onOpenSource(src)}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-[11px] font-semibold text-slate-700 transition-colors cursor-pointer"
+                >
+                  <span className="truncate max-w-[120px]">{src.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Text paragraphs */}
           <div className="text-[14.5px] text-slate-800 leading-relaxed space-y-3 font-normal">
             {message.text.split('\n\n').map((paragraph, idx) => {
-              // Primary headline/opening
               if (idx === 0 && paragraph.startsWith("Here's")) {
                 return (
                   <h3
@@ -130,7 +182,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
             <div className="rounded-2xl bg-slate-50/70 border border-slate-200/80 p-3.5 sm:p-4 flex items-center justify-between gap-3 transition-colors hover:bg-slate-100/70">
               <div className="flex items-center gap-3 min-w-0">
                 {/* Red PDF Icon badge */}
-                <div className="h-10 w-10 rounded-xl bg-red-50 border border-red-200/70 flex flex-col items-center justify-center shrink-0 text-red-600 shadow-3xs">
+                <div className="h-10 w-10 rounded-xl bg-red-50 border border-red-200/70 flex flex-col items-center justify-center shrink-0 text-red-600 shadow-2xs">
                   <FileText className="h-4 w-4" />
                   <span className="text-[9px] font-extrabold uppercase tracking-tight leading-none mt-0.5">
                     PDF
@@ -159,7 +211,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
                         description: `Viewing ${message.document!.title}`,
                       })
                 }
-                className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/90 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all shadow-3xs hover:shadow-xs active:scale-95 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/90 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
               >
                 <span>Open</span>
                 <ExternalLink className="h-3 w-3 text-slate-400" />
@@ -243,6 +295,7 @@ export const AssistantMessage: React.FC<AssistantMessageProps> = ({
     </div>
   );
 };
+
 
 export const TypingIndicator: React.FC = () => {
   return (

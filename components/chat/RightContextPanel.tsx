@@ -8,6 +8,7 @@ import {
   Share2,
   Calendar,
   CheckSquare,
+  Globe,
   Sparkles,
 } from 'lucide-react';
 import { SourceReference, ChatAction, MemoryContextData } from './types';
@@ -38,39 +39,12 @@ export const RightContextPanel: React.FC<RightContextPanelProps> = ({
   const { addToast } = useToast();
   const [showAllSources, setShowAllSources] = useState(false);
 
-  // Default fallback sources if none passed
-  const displaySources = sources.length > 0 ? sources : [
-    {
-      id: 'src-drive-1',
-      connector: 'drive' as const,
-      connectorName: 'Google Drive',
-      title: 'proposal_v2.3.pdf',
-      iconType: 'drive' as const,
-    },
-    {
-      id: 'src-gmail-1',
-      connector: 'gmail' as const,
-      connectorName: 'Gmail',
-      title: 'Re: Project Alpha Proposal',
-      iconType: 'gmail' as const,
-    },
-    {
-      id: 'src-notion-1',
-      connector: 'notion' as const,
-      connectorName: 'Notion',
-      title: 'Project Alpha Hub',
-      iconType: 'notion' as const,
-    },
-    {
-      id: 'src-cal-1',
-      connector: 'calendar' as const,
-      connectorName: 'Calendar',
-      title: 'Project Alpha Review Meeting',
-      iconType: 'calendar' as const,
-    },
-  ];
+  const hasSources = sources && sources.length > 0;
+  const hasActions = actions && actions.length > 0;
+  const hasMemory = Boolean(memory && memory.text);
+  const hasAnything = hasSources || hasActions || hasMemory;
 
-  const visibleSources = showAllSources ? displaySources : displaySources.slice(0, 3);
+  const visibleSources = showAllSources ? sources : sources.slice(0, 4);
 
   const getSourceIcon = (type?: string) => {
     switch (type) {
@@ -98,194 +72,201 @@ export const RightContextPanel: React.FC<RightContextPanelProps> = ({
         );
       default:
         return (
-          <div className="h-7 w-7 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+          <div className="h-7 w-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
             <Calendar className="h-4 w-4" />
           </div>
         );
     }
   };
 
-  const defaultActions: ChatAction[] = actions.length > 0 ? actions : [
-    { id: 'act-drive', label: 'Open in Drive', actionType: 'open_source' },
-    { id: 'act-share', label: 'Share', actionType: 'share' },
-    { id: 'act-notion', label: 'Add to Notion', actionType: 'add_to_notion' },
-    { id: 'act-task', label: 'Create follow-up task', actionType: 'create_task' },
-  ];
-
   return (
     <aside
       className={cn(
-        'w-full lg:w-[300px] xl:w-[330px] shrink-0 flex flex-col space-y-6 select-none',
+        'w-full lg:w-[280px] xl:w-[310px] shrink-0 flex flex-col space-y-6 select-none',
         className
       )}
     >
-      {/* 1. SOURCES SECTION */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-950 tracking-tight">
-          Sources
-        </h3>
+      {/* 1. SOURCES SECTION (if relevant) */}
+      {hasSources && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Sources Used
+            </h3>
+            <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+              {sources.length}
+            </span>
+          </div>
 
-        <div className="space-y-2">
-          {visibleSources.map((src) => (
+          <div className="space-y-2">
+            {visibleSources.map((src) => (
+              <button
+                key={src.id}
+                type="button"
+                onClick={() => {
+                  if (onOpenSource) {
+                    onOpenSource(src);
+                  } else {
+                    addToast({
+                      type: 'info',
+                      title: `Viewing ${src.connectorName}`,
+                      description: `Opened source: ${src.title}`,
+                    });
+                  }
+                }}
+                className="w-full p-2.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 text-left flex items-center justify-between gap-2.5 transition-all shadow-2xs hover:shadow-xs group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {getSourceIcon(src.iconType || (src.connector as string))}
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-slate-900 block truncate group-hover:text-indigo-900">
+                      {src.title}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 block truncate">
+                      {src.connectorName}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            ))}
+
+            {/* Show all sources toggle */}
+            {sources.length > 4 && (
+              <button
+                type="button"
+                onClick={() => setShowAllSources(!showAllSources)}
+                className="w-full pt-1 text-center text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>
+                  {showAllSources
+                    ? 'Show fewer sources'
+                    : `Show all ${sources.length} sources`}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    'h-3.5 w-3.5 transition-transform duration-150',
+                    showAllSources && 'rotate-180'
+                  )}
+                />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. ACTIONS SECTION (if relevant) */}
+      {hasActions && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Suggested Actions
+          </h3>
+
+          <div className="space-y-2">
+            {actions.map((act) => (
+              <button
+                key={act.id}
+                type="button"
+                onClick={() => {
+                  if (onExecuteAction) {
+                    onExecuteAction(act);
+                  } else {
+                    addToast({
+                      type: 'success',
+                      title: 'Action Triggered',
+                      description: `Executed: ${act.label}`,
+                    });
+                  }
+                }}
+                className="w-full p-2.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/80 text-left flex items-center justify-between gap-2.5 transition-all shadow-2xs hover:shadow-xs group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  {act.actionType === 'open_source' ? (
+                    <div className="h-6 w-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                      <ExternalLink className="h-3 w-3" />
+                    </div>
+                  ) : act.actionType === 'share' ? (
+                    <div className="h-6 w-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <Share2 className="h-3 w-3" />
+                    </div>
+                  ) : act.actionType === 'add_to_notion' ? (
+                    <div className="h-6 w-6 rounded-lg bg-slate-100 text-slate-800 flex items-center justify-center font-bold text-[10px] shrink-0">
+                      N
+                    </div>
+                  ) : (
+                    <div className="h-6 w-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                      <CheckSquare className="h-3 w-3" />
+                    </div>
+                  )}
+                  <span className="text-xs font-semibold text-slate-800 group-hover:text-indigo-900">
+                    {act.label}
+                  </span>
+                </div>
+                <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. MEMORY SECTION (if relevant) */}
+      {hasMemory && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Context Memory
+          </h3>
+
+          <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-2.5">
+            <p className="text-xs text-slate-700 leading-relaxed font-normal">
+              {memory.text}
+            </p>
+
             <button
-              key={src.id}
               type="button"
               onClick={() => {
-                if (onOpenSource) {
-                  onOpenSource(src);
+                if (onNavigateToMemory) {
+                  onNavigateToMemory();
                 } else {
                   addToast({
                     type: 'info',
-                    title: `Viewing ${src.connectorName}`,
-                    description: `Opened source: ${src.title}`,
+                    title: 'Memory Context',
+                    description: 'Opening workspace memory overview.',
                   });
                 }
               }}
-              className="w-full p-3 rounded-2xl bg-white hover:bg-slate-50/90 border border-slate-200/70 text-left flex items-center justify-between gap-3 transition-all shadow-3xs hover:shadow-xs group cursor-pointer"
+              className="w-full py-1.5 px-3 rounded-xl bg-slate-50 hover:bg-indigo-50 text-indigo-600 hover:text-indigo-800 text-xs font-semibold text-center border border-slate-200/80 transition-colors cursor-pointer"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                {getSourceIcon(src.iconType || (src.connector as string))}
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-slate-900 block truncate group-hover:text-indigo-900">
-                    {src.connectorName}
-                  </span>
-                  <span className="text-[11px] text-slate-500 block truncate">
-                    {src.title}
-                  </span>
-                </div>
-              </div>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              {memory.actionText || 'View related memories'}
             </button>
-          ))}
-
-          {/* Show all sources toggle */}
-          {displaySources.length > 3 && (
-            <button
-              type="button"
-              onClick={() => setShowAllSources(!showAllSources)}
-              className="w-full pt-1 text-center text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 transition-colors cursor-pointer"
-            >
-              <span>
-                {showAllSources
-                  ? 'Show fewer sources'
-                  : `Show all ${displaySources.length} sources`}
-              </span>
-              <ChevronDown
-                className={cn(
-                  'h-3.5 w-3.5 transition-transform duration-150',
-                  showAllSources && 'rotate-180'
-                )}
-              />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 2. ACTIONS SECTION */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-950 tracking-tight">
-          Actions
-        </h3>
-
-        <div className="space-y-2">
-          {defaultActions.map((act) => (
-            <button
-              key={act.id}
-              type="button"
-              onClick={() => {
-                if (onExecuteAction) {
-                  onExecuteAction(act);
-                } else {
-                  addToast({
-                    type: 'success',
-                    title: 'Action Triggered',
-                    description: `Executed: ${act.label}`,
-                  });
-                }
-              }}
-              className="w-full p-3 rounded-2xl bg-white hover:bg-slate-50/90 border border-slate-200/70 text-left flex items-center justify-between gap-3 transition-all shadow-3xs hover:shadow-xs group cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                {act.actionType === 'open_source' ? (
-                  <div className="h-6 w-6 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <ExternalLink className="h-3 w-3" />
-                  </div>
-                ) : act.actionType === 'share' ? (
-                  <div className="h-6 w-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Share2 className="h-3 w-3" />
-                  </div>
-                ) : act.actionType === 'add_to_notion' ? (
-                  <div className="h-6 w-6 rounded-md bg-slate-100 text-slate-800 flex items-center justify-center font-bold text-[10px]">
-                    N
-                  </div>
-                ) : (
-                  <div className="h-6 w-6 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <CheckSquare className="h-3 w-3" />
-                  </div>
-                )}
-                <span className="text-xs font-semibold text-slate-800 group-hover:text-indigo-900">
-                  {act.label}
-                </span>
-              </div>
-              <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 shrink-0" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 3. MEMORY SECTION */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-950 tracking-tight">
-          Memory
-        </h3>
-
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/70 shadow-3xs space-y-3">
-          <p className="text-xs text-slate-600 leading-relaxed">
-            {memory?.text ||
-              'You asked about Project Alpha proposal 3 times this week.'}
-          </p>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (onNavigateToMemory) {
-                onNavigateToMemory();
-              } else {
-                addToast({
-                  type: 'info',
-                  title: 'Memory Context',
-                  description: 'Opening workspace memory overview.',
-                });
-              }
-            }}
-            className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-indigo-50/80 text-indigo-600 hover:text-indigo-800 text-xs font-semibold text-center border border-slate-200/80 transition-colors cursor-pointer"
-          >
-            {memory?.actionText || 'View related memories'}
-          </button>
-        </div>
-      </div>
-
-      {/* 4. "Working on something important?" PROMO CARD */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-[#eff4ff] via-[#f5f3ff] to-[#eef2ff] border border-indigo-100/90 p-5 shadow-3xs overflow-hidden">
-        {/* Orbital Sphere Graphic in Background */}
-        <div className="absolute -right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-80">
-          <div className="relative w-24 h-24 flex items-center justify-center">
-            {/* Glowing Orb */}
-            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 shadow-[0_0_20px_rgba(99,102,241,0.5)] flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-white/60 blur-[1px]" />
-            </div>
-            {/* Orbit Rings */}
-            <div className="absolute inset-0 rounded-full border border-indigo-400/40 scale-125 -rotate-45" />
-            <div className="absolute inset-1 rounded-full border border-purple-400/30 scale-90 rotate-12" />
           </div>
         </div>
+      )}
 
-        <div className="relative z-10 max-w-[190px] space-y-1.5">
+      {/* 4. CLEAN EMPTY CONTEXT STATE (If nothing relevant is active) */}
+      {!hasAnything && (
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-2 text-center">
+          <div className="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+            <Globe className="h-4 w-4" />
+          </div>
+          <h4 className="text-xs font-bold text-slate-900">Context Workspace</h4>
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            Connected sources, actions, and memory insights will automatically appear here when NEXORBIT accesses your connected world.
+          </p>
+        </div>
+      )}
+
+      {/* 5. PROACTIVE WATCH CARD */}
+      <div className="relative rounded-3xl bg-gradient-to-br from-[#f0f4ff] via-[#f5f3ff] to-[#eef2ff] border border-indigo-100/90 p-4 sm:p-5 shadow-2xs overflow-hidden">
+        <div className="relative z-10 space-y-2">
+          <div className="flex items-center gap-1.5 text-indigo-700 text-xs font-bold">
+            <Sparkles className="h-3.5 w-3.5 fill-indigo-200" />
+            <span>Proactive Intelligence</span>
+          </div>
           <h4 className="text-xs sm:text-[13px] font-bold text-slate-950 leading-snug">
             Working on something important?
           </h4>
-          <p className="text-[11px] text-slate-500 leading-relaxed pb-2">
-            Let NEXORBIT proactively track updates for you.
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            Let NEXORBIT proactively track updates across your connected apps for you.
           </p>
 
           <button
@@ -297,11 +278,11 @@ export const RightContextPanel: React.FC<RightContextPanelProps> = ({
                 addToast({
                   type: 'success',
                   title: 'Proactive Watch Created',
-                  description: 'NEXORBIT will alert you whenever Project Alpha changes.',
+                  description: 'NEXORBIT will alert you whenever your watched documents or discussions change.',
                 });
               }
             }}
-            className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200/90 text-xs font-semibold shadow-3xs transition-all active:scale-95 cursor-pointer"
+            className="mt-1 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200/90 text-xs font-bold shadow-2xs transition-all active:scale-95 cursor-pointer"
           >
             Create a Watch
           </button>
@@ -310,3 +291,4 @@ export const RightContextPanel: React.FC<RightContextPanelProps> = ({
     </aside>
   );
 };
+

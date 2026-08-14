@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Bot, Globe, ChevronDown } from 'lucide-react';
+import { Sparkles, Bot, Globe } from 'lucide-react';
 import { AIMode } from './types';
 import { cn } from '../../lib/utils';
 
@@ -19,7 +19,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   return (
     <div
       className={cn(
-        'w-full max-w-2xl mx-auto flex items-center justify-center p-1 bg-slate-100/90 rounded-2xl sm:rounded-3xl border border-slate-200/60 shadow-3xs select-none',
+        'w-full max-w-xl mx-auto flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shadow-2xs select-none',
         className
       )}
       role="radiogroup"
@@ -31,11 +31,12 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         role="radio"
         aria-checked={currentMode === 'auto'}
         onClick={() => onChangeMode('auto')}
+        title="Auto: NEXORBIT decides whether request needs general AI or connected context"
         className={cn(
-          'flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl transition-all duration-150 text-center flex items-center justify-center gap-2 cursor-pointer',
+          'flex-1 py-2 px-3 rounded-xl transition-all duration-150 text-center flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold',
           currentMode === 'auto'
-            ? 'bg-white text-indigo-700 shadow-sm font-semibold border border-indigo-100/80'
-            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/40 font-medium'
+            ? 'bg-white text-indigo-900 shadow-xs border border-slate-200/90'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
         )}
       >
         <Sparkles
@@ -44,7 +45,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             currentMode === 'auto' ? 'text-indigo-600 fill-indigo-100' : 'text-slate-400'
           )}
         />
-        <span className="text-xs sm:text-[13px] tracking-tight">Auto</span>
+        <span>Auto</span>
       </button>
 
       {/* 2. NEXORBIT AI (General) */}
@@ -53,32 +54,21 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         role="radio"
         aria-checked={currentMode === 'general'}
         onClick={() => onChangeMode('general')}
+        title="NEXORBIT AI: General AI conversation"
         className={cn(
-          'flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl transition-all duration-150 text-left flex items-center justify-center gap-2.5 cursor-pointer',
+          'flex-1 py-2 px-3 rounded-xl transition-all duration-150 text-center flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold',
           currentMode === 'general'
-            ? 'bg-white text-indigo-950 shadow-sm font-semibold border border-indigo-100/80'
-            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/40 font-medium'
+            ? 'bg-white text-indigo-900 shadow-xs border border-slate-200/90'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
         )}
       >
-        <div className="shrink-0">
-          <Bot
-            className={cn(
-              'h-3.5 w-3.5 transition-colors',
-              currentMode === 'general' ? 'text-indigo-600' : 'text-slate-400'
-            )}
-          />
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1">
-            <span className="text-xs sm:text-[13px] tracking-tight font-semibold">
-              NEXORBIT AI
-            </span>
-            <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
-          </div>
-          <span className="hidden sm:block text-[10px] text-slate-400 leading-none">
-            General AI
-          </span>
-        </div>
+        <Bot
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 transition-colors',
+            currentMode === 'general' ? 'text-indigo-600' : 'text-slate-400'
+          )}
+        />
+        <span>NEXORBIT AI</span>
       </button>
 
       {/* 3. My Connected World */}
@@ -87,30 +77,23 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         role="radio"
         aria-checked={currentMode === 'connected'}
         onClick={() => onChangeMode('connected')}
+        title="My Connected World: Use information from user's connected apps"
         className={cn(
-          'flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl sm:rounded-2xl transition-all duration-150 text-left flex items-center justify-center gap-2.5 cursor-pointer',
+          'flex-1 py-2 px-3 rounded-xl transition-all duration-150 text-center flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold',
           currentMode === 'connected'
-            ? 'bg-white text-indigo-950 shadow-sm font-semibold border border-indigo-100/80'
-            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/40 font-medium'
+            ? 'bg-white text-indigo-900 shadow-xs border border-slate-200/90'
+            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
         )}
       >
-        <div className="shrink-0">
-          <Globe
-            className={cn(
-              'h-3.5 w-3.5 transition-colors',
-              currentMode === 'connected' ? 'text-indigo-600' : 'text-slate-400'
-            )}
-          />
-        </div>
-        <div className="min-w-0">
-          <span className="text-xs sm:text-[13px] tracking-tight font-semibold block">
-            My Connected World
-          </span>
-          <span className="hidden sm:block text-[10px] text-slate-400 leading-none">
-            Use my data & apps
-          </span>
-        </div>
+        <Globe
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 transition-colors',
+            currentMode === 'connected' ? 'text-indigo-600' : 'text-slate-400'
+          )}
+        />
+        <span className="truncate">My Connected World</span>
       </button>
     </div>
   );
 };
+

@@ -122,6 +122,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   );
   const [currentMode, setCurrentMode] = useState<AIMode>(initialMode);
   const [inputText, setInputText] = useState(initialQuery);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [isThinking, setIsThinking] = useState(false);
 
   // Drawers & Modals state
@@ -151,7 +152,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   // Execute a user query with simulated AI response
   const executeUserQuery = useCallback(
-    (query: string, convId: string, mode: AIMode) => {
+    (query: string, convId: string, mode: AIMode, msgAttachments?: ChatAttachment[]) => {
       const userMsg: ChatMessage = {
         id: createId('msg-user'),
         sender: 'user',
@@ -161,6 +162,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           minute: '2-digit',
         }),
         modeUsed: mode,
+        attachments: msgAttachments && msgAttachments.length > 0 ? msgAttachments : undefined,
       };
 
       // Add user message immediately
@@ -181,7 +183,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       // Fast, smooth AI response delivery
       setTimeout(() => {
-        const result = generateAIResponse(query, mode);
+        const result = generateAIResponse(
+          query || (msgAttachments ? `[Attached ${msgAttachments.length} file(s)]` : ''),
+          mode
+        );
         const aiMsg: ChatMessage = {
           id: createId('msg-ai'),
           sender: 'ai',
@@ -272,19 +277,24 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, [currentMode, handleStartNewConversation]);
 
   // Submit current input
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = (e?: React.FormEvent, submitAttachments?: ChatAttachment[]) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() || isThinking) return;
+    const pendingAttachments = submitAttachments || attachments;
+    if ((!inputText.trim() && pendingAttachments.length === 0) || isThinking) return;
 
     const query = inputText.trim();
+    const sendingAttachments = [...pendingAttachments];
     setInputText('');
+    setAttachments([]);
 
     let convId = activeConversationId;
     if (!convId || !activeConv) {
       const newId = createId('conv');
       const newConv: ChatConversation = {
         id: newId,
-        title: query.slice(0, 36) + (query.length > 36 ? '...' : ''),
+        title: query
+          ? query.slice(0, 36) + (query.length > 36 ? '...' : '')
+          : sendingAttachments[0]?.name || 'New Chat',
         updatedAt: 'Just now',
         mode: currentMode,
         messages: [],
@@ -294,7 +304,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       convId = newId;
     }
 
-    executeUserQuery(query, convId, currentMode);
+    executeUserQuery(query, convId, currentMode, sendingAttachments);
   };
 
   // Handle action triggers from context panel or assistant message
@@ -463,8 +473,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
               inputText={inputText}
               onChangeText={setInputText}
               onSubmit={handleSendMessage}
-              onOpenAttach={() => setIsAttachModalOpen(true)}
-              onOpenVoice={() => setIsVoiceModalOpen(true)}
+              attachments={attachments}
+              onAddAttachments={(files) =>
+                setAttachments((prev) => [...prev, ...files])
+              }
+              onRemoveAttachment={(id) =>
+                setAttachments((prev) => prev.filter((a) => a.id !== id))
+              }
               isThinking={isThinking}
             />
           </div>

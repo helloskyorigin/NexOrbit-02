@@ -77,12 +77,22 @@ export interface MemoryContextData {
   relatedCount?: number;
 }
 
+export interface ChatAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  previewUrl?: string;
+  file?: File;
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
   text: string;
   timestamp: string;
   modeUsed?: AIMode;
+  attachments?: ChatAttachment[];
   document?: DocumentCardData;
   highlights?: string[];
   sourcesUsed?: SourceReference[];
