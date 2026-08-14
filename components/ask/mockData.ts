@@ -95,7 +95,7 @@ export const MOCK_PROJECT_ALPHA_RESPONSE: AskResponseData = {
   },
   sources: MOCK_SOURCES,
   whyExplanation:
-    'NEXORBIT detected contradictory delivery targets between Rahul’s direct email thread and the master project brief.',
+    'NexOrbit detected contradictory delivery targets between Rahul’s direct email thread and the master project brief.',
 };
 
 export const MOCK_RISK_RESPONSE: AskResponseData = {

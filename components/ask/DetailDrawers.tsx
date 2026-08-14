@@ -203,7 +203,7 @@ export const EmailDrawer: React.FC<EmailDrawerProps> = ({
 
           <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-1">
             <span className="text-[10.5px] font-bold text-indigo-600 uppercase tracking-wider block">
-              NEXORBIT Suggestion
+              NexOrbit Suggestion
             </span>
             <p className="text-xs text-slate-600 leading-relaxed">
               Rahul is awaiting confirmation. Reply now to clarify the Monday August 18 timeline agreed in the master spec.
@@ -431,7 +431,7 @@ export const PrepareResponseModal: React.FC<PrepareResponseModalProps> = ({
               <p className="text-xs text-slate-500 font-normal">
                 {step === 'preparing'
                   ? 'Synthesizing context from Gmail, Calendar, and Drive...'
-                  : 'NEXORBIT generated a clarifying response.'}
+                  : 'NexOrbit generated a clarifying response.'}
               </p>
             </div>
           </div>

@@ -43,7 +43,7 @@ export const ProUsageCard: React.FC<ProUsageCardProps> = ({
           </div>
           <div>
             <span className="text-xs font-semibold text-slate-100 tracking-tight block leading-tight">
-              NEXORBIT PRO
+              NexOrbit Pro
             </span>
             <span className="text-[10px] text-slate-400 block">Monthly allocation</span>
           </div>

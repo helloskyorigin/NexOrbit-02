@@ -79,7 +79,7 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
               </div>
               <div>
                 <h2 className="text-base font-extrabold tracking-tight text-slate-950 leading-none">
-                  NEXORBIT
+                  NexOrbit
                 </h2>
                 <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
                   AI BRAIN
@@ -152,7 +152,7 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
           </div>
 
           <div className="text-[10px] text-slate-400 text-center font-medium">
-            NEXORBIT • Free Plan
+            NexOrbit • Free Plan
           </div>
         </div>
       </div>

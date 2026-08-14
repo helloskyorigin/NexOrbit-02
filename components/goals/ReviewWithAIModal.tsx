@@ -66,7 +66,7 @@ export const ReviewWithAIModal: React.FC<ReviewWithAIModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
-                  NEXORBIT AI BRAIN
+                  NexOrbit AI Brain
                 </span>
                 <span className="text-slate-300">•</span>
                 <span className="text-xs text-slate-500 font-medium">Quarterly Sync Audit</span>
@@ -99,7 +99,7 @@ export const ReviewWithAIModal: React.FC<ReviewWithAIModalProps> = ({
               </span>
             </div>
             <p className="text-sm text-slate-800 leading-relaxed">
-              Based on your synced Workspace calendar (18 hrs of meetings this week), 4 active Drive specifications, and 23 unread SLA emails, NEXORBIT forecasts that <strong>3 of your 6 goals</strong> are on trajectory for on-time delivery.
+              Based on your synced Workspace calendar (18 hrs of meetings this week), 4 active Drive specifications, and 23 unread SLA emails, NexOrbit forecasts that <strong>3 of your 6 goals</strong> are on trajectory for on-time delivery.
             </p>
           </div>
 
@@ -184,7 +184,7 @@ export const ReviewWithAIModal: React.FC<ReviewWithAIModalProps> = ({
         {/* Footer Bar */}
         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <span className="text-xs text-slate-400">
-            NEXORBIT AI Cognitive Model v3.2 • Workspace Synchronized
+            NexOrbit AI Cognitive Model v3.2 • Workspace Synchronized
           </span>
           <Button
             variant="secondary"

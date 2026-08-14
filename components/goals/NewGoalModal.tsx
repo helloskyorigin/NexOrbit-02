@@ -198,7 +198,7 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
           type: 'calendar',
           name: 'Google Calendar',
           detail: 'Auto-linked schedule context',
-          snippet: 'NEXORBIT will monitor schedule density around this goal',
+          snippet: 'NexOrbit will monitor schedule density around this goal',
           time: 'Just now',
         },
         {
@@ -211,7 +211,7 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
         },
       ],
       milestones: defaultMilestones,
-      aiReasoning: `Goal established in ${category} category. NEXORBIT is actively watching relevant Gmail threads and Calendar slots to support execution.`,
+      aiReasoning: `Goal established in ${category} category. NexOrbit is actively watching relevant Gmail threads and Calendar slots to support execution.`,
     };
 
     onCreateGoal(newGoal);
@@ -302,7 +302,7 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
                   <span>Describe what you want to achieve</span>
                 </div>
                 <p className="text-xs text-indigo-900/80 leading-relaxed">
-                  NEXORBIT will intelligently deduce the category, target timeline, key milestones, and recommended next actions from your natural language description.
+                  NexOrbit will intelligently deduce the category, target timeline, key milestones, and recommended next actions from your natural language description.
                 </p>
               </div>
 
@@ -326,7 +326,7 @@ export const NewGoalModal: React.FC<NewGoalModalProps> = ({
                   leftIcon={isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs h-9 px-4 rounded-xl cursor-pointer"
                 >
-                  {isGenerating ? 'Analyzing with NEXORBIT...' : 'Generate Goal Blueprint'}
+                  {isGenerating ? 'Analyzing with NexOrbit...' : 'Generate Goal Blueprint'}
                 </Button>
               </div>
 

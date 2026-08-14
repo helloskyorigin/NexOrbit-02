@@ -26,7 +26,7 @@ export const WhyPanel: React.FC<WhyPanelProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Why am I seeing this?"
-      description="NEXORBIT Context Reasoning & Transparency"
+      description="NexOrbit Context Reasoning & Transparency"
       maxWidth="md"
     >
       <div className="space-y-4 text-xs">
@@ -68,7 +68,7 @@ export const WhyPanel: React.FC<WhyPanelProps> = ({
           <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="text-[11px] leading-relaxed">
             <span className="font-semibold text-slate-900 block">Private Workspace Context</span>
-            NEXORBIT uses zero-shot cross-app reasoning with strict privacy boundaries. Your personal credentials and documents are never shared externally.
+            NexOrbit uses zero-shot cross-app reasoning with strict privacy boundaries. Your personal credentials and documents are never shared externally.
           </div>
         </div>
       </div>

@@ -51,7 +51,7 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
-                  NEXORBIT Intelligence
+                  NexOrbit Intelligence
                 </span>
                 <span className="text-slate-300">•</span>
                 <span className="text-xs text-slate-500 font-medium">Predictive Velocity Report</span>
@@ -112,7 +112,7 @@ export const AIInsightsModal: React.FC<AIInsightsModalProps> = ({
             </div>
 
             <p className="text-sm text-slate-700 leading-relaxed font-medium">
-              Launch target is set for Jun 30 (45 days). NEXORBIT identified that <strong>pricing tier signoff</strong> is currently blocking the QA and Dogfooding cohorts. Resolving the open pricing strategy email thread will unblock 2 downstream milestones immediately.
+              Launch target is set for Jun 30 (45 days). NexOrbit identified that <strong>pricing tier signoff</strong> is currently blocking the QA and Dogfooding cohorts. Resolving the open pricing strategy email thread will unblock 2 downstream milestones immediately.
             </p>
 
             <div className="pt-1 flex items-center gap-2">

@@ -33,7 +33,7 @@ export const PAGE_CONFIG: Record<string, PageMeta> = {
   home: {
     id: 'home',
     title: 'Home',
-    subtitle: 'Your NEXORBIT overview will appear here.',
+    subtitle: 'Your NexOrbit overview will appear here.',
     icon: <Home className="h-5 w-5 text-indigo-600" />,
     badgeText: 'Phase 1 Shell Active',
   },
@@ -158,7 +158,7 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ pageId, onNavi
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100">
               <span className="text-slate-500">Design Tokens</span>
-              <span className="text-emerald-600 font-medium">NEXORBIT Light Luxury</span>
+              <span className="text-emerald-600 font-medium">NexOrbit Light Luxury</span>
             </div>
             <div className="flex justify-between py-1">
               <span className="text-slate-500">App Shell Status</span>

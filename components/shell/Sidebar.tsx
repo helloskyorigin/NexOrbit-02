@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div
             onClick={() => onSelectPage('home')}
             className="flex items-center gap-3 cursor-pointer group"
-            title={isCollapsed ? 'NEXORBIT AI BRAIN (Home)' : undefined}
+            title={isCollapsed ? 'NexOrbit AI BRAIN (Home)' : undefined}
           >
             {/* Orbital Ribbon Logo */}
             <div className="relative h-8 w-8 flex items-center justify-center shrink-0">
@@ -128,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && (
               <div>
                 <div className="text-[15px] font-extrabold tracking-wider text-slate-950 font-sans leading-none">
-                  NEXORBIT
+                  NexOrbit
                 </div>
                 <div className="text-[9px] font-bold tracking-widest text-indigo-600 uppercase mt-0.5">
                   AI BRAIN

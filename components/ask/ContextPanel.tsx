@@ -56,7 +56,7 @@ export const ContextPanel: React.FC<ContextPanelProps> = ({ onClose, className }
             Context
           </h3>
           <p className="text-[10px] text-slate-400 font-medium mt-0.5 leading-snug">
-            What NEXORBIT used to understand this
+            What NexOrbit used to understand this
           </p>
         </div>
  

@@ -37,7 +37,7 @@ export const AIThinkingState: React.FC<AIThinkingStateProps> = ({ className }) =
 
         <div className="space-y-1 min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-900">NEXORBIT AI Reasoning</span>
+            <span className="text-xs font-bold text-slate-900">NexOrbit AI Reasoning</span>
             <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
               Processing
             </span>

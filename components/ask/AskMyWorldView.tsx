@@ -322,7 +322,7 @@ export const AskMyWorldView: React.FC<AskMyWorldViewProps> = ({
                   title: isDeepResearch ? 'Deep Research Disabled' : 'Deep Research Enabled',
                   description: isDeepResearch
                     ? 'Returned to standard query speed.'
-                    : 'NEXORBIT will perform multi-hop cross-reference synthesis.',
+                    : 'NexOrbit will perform multi-hop cross-reference synthesis.',
                 });
               }}
               isLoading={isLoading}

@@ -120,7 +120,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             <div className="bg-slate-100/80 border-b border-slate-200/80 px-4 py-2 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <Badge variant="indigo" size="sm">
-                  NEXORBIT 2.0
+                  NexOrbit 2.0
                 </Badge>
                 <span className="text-[11px] text-slate-500 hidden sm:inline-block">
                   Navigating: <code className="font-mono text-indigo-700 font-semibold">/{activePage}</code>

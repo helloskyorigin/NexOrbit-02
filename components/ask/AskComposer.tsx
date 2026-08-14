@@ -158,7 +158,7 @@ export const AskComposer: React.FC<AskComposerProps> = ({
 
       {/* Centered Disclaimer */}
       <div className="flex items-center justify-center gap-1 text-[11px] text-slate-400 font-normal pt-1">
-        <span>NEXORBIT may make mistakes. Verify important info.</span>
+        <span>NexOrbit may make mistakes. Verify important info.</span>
         <Info className="h-3.5 w-3.5 text-slate-400 hover:text-slate-600 cursor-pointer inline" />
       </div>
     </div>

@@ -2,11 +2,11 @@ export type Language = 'en' | 'hi';
 
 export const translations = {
   en: {
-    brandName: 'NEXORBIT',
+    brandName: 'NexOrbit',
     brandSubtitle: 'AI BRAIN',
-    welcomeTitle: 'Welcome to NEXORBIT',
+    welcomeTitle: 'Welcome to NexOrbit',
     welcomeSubtitle: 'Your personal AI workspace, built around the way you work.',
-    createAccountTitle: 'Create your NEXORBIT account',
+    createAccountTitle: 'Create your NexOrbit account',
     createAccountSubtitle: 'Start building your personal AI workspace.',
     continueWithGoogle: 'Continue with Google',
     continueWithGitHub: 'Continue with GitHub',
@@ -37,7 +37,7 @@ export const translations = {
     changeEmail: 'Change',
     
     // Onboarding Profile Setup
-    profileSetupTitle: 'Welcome to NEXORBIT',
+    profileSetupTitle: 'Welcome to NexOrbit',
     profileSetupSubtitle: 'Tell us a little about you.',
     progressIndicator: '1 of 1',
     nameLabel: 'Your name',
@@ -61,11 +61,11 @@ export const translations = {
     incorrectPasswordError: 'Incorrect password. Please try again.',
   },
   hi: {
-    brandName: 'NEXORBIT',
+    brandName: 'NexOrbit',
     brandSubtitle: 'AI मस्तिष्क',
-    welcomeTitle: 'NEXORBIT में आपका स्वागत है',
+    welcomeTitle: 'NexOrbit में आपका स्वागत है',
     welcomeSubtitle: 'आपका व्यक्तिगत AI वर्कस्पेस, जो आपके काम करने के तरीके के अनुकूल है।',
-    createAccountTitle: 'अपना NEXORBIT खाता बनाएं',
+    createAccountTitle: 'अपना NexOrbit खाता बनाएं',
     createAccountSubtitle: 'अपना व्यक्तिगत AI वर्कस्पेस बनाना शुरू करें।',
     continueWithGoogle: 'Google के साथ आगे बढ़ें',
     continueWithGitHub: 'GitHub के साथ आगे बढ़ें',
@@ -96,7 +96,7 @@ export const translations = {
     changeEmail: 'बदलें',
     
     // Onboarding Profile Setup
-    profileSetupTitle: 'NEXORBIT में आपका स्वागत है',
+    profileSetupTitle: 'NexOrbit में आपका स्वागत है',
     profileSetupSubtitle: 'अपने बारे में थोड़ा बताएं।',
     progressIndicator: '1 में से 1',
     nameLabel: 'आपका नाम',

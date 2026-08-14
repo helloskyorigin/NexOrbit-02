@@ -39,7 +39,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       addToast({
         type: 'info',
         title: 'Brain Search',
-        description: `Searching NEXORBIT context for: "${searchValue}"`,
+        description: `Searching NexOrbit context for: "${searchValue}"`,
       });
       setSearchValue('');
     }
@@ -74,7 +74,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Page Title / Breadcrumb */}
         <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-          <span className="hidden sm:inline-block font-semibold text-slate-400">NEXORBIT</span>
+          <span className="hidden sm:inline-block font-semibold text-slate-400">NexOrbit</span>
           <ChevronRight className="h-3.5 w-3.5 text-slate-300 hidden sm:inline-block" />
           <div className="flex items-center gap-1.5 text-slate-900 font-bold text-sm tracking-tight">
             {activePageIcon && <span className="text-indigo-600">{activePageIcon}</span>}

@@ -32,7 +32,7 @@ export const ForgetMemoryModal: React.FC<ForgetMemoryModalProps> = ({
               Forget this memory?
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              NEXORBIT will no longer use <span className="font-semibold text-slate-800">&ldquo;{memory.title}&rdquo;</span> for future responses and recommendations.
+              NexOrbit will no longer use <span className="font-semibold text-slate-800">&ldquo;{memory.title}&rdquo;</span> for future responses and recommendations.
             </p>
           </div>
         </div>

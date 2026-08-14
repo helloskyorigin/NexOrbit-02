@@ -49,7 +49,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({
     addToast({
       type: 'info',
       title: 'Signed Out',
-      description: 'You have been signed out of NEXOrbit.',
+      description: 'You have been signed out of NexOrbit.',
     });
   };
 

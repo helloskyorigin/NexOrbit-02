@@ -20,7 +20,7 @@ export const ConnectedAppsTab: React.FC<ConnectedAppsTabProps> = ({
           Connected Apps
         </h2>
         <p className="text-xs text-slate-500 font-normal">
-          Manage services connected to NEXORBIT.
+          Manage services connected to NexOrbit.
         </p>
       </div>
 
@@ -55,7 +55,7 @@ export const ConnectedAppsTab: React.FC<ConnectedAppsTabProps> = ({
               Manage Connected Apps & Integrations
             </h4>
             <p className="text-[11px] text-slate-500 font-normal">
-              Connect Gmail, Google Calendar, Notion, Google Drive, or GitHub to NEXORBIT.
+              Connect Gmail, Google Calendar, Notion, Google Drive, or GitHub to NexOrbit.
             </p>
           </div>
 

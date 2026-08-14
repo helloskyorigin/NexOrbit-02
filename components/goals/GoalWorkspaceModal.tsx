@@ -78,7 +78,7 @@ export const GoalWorkspaceModal: React.FC<GoalWorkspaceModalProps> = ({
     onUpdateGoal(updated);
     addToast({
       title: 'Milestone Updated',
-      description: 'Goal progress synchronized across NEXORBIT.',
+      description: 'Goal progress synchronized across NexOrbit.',
       type: 'success',
     });
   };
@@ -411,7 +411,7 @@ export const GoalWorkspaceModal: React.FC<GoalWorkspaceModalProps> = ({
                   <span>Synaptic Intelligence Linkage</span>
                 </div>
                 <p className="text-indigo-800/80 leading-relaxed">
-                  NEXORBIT continuously synchronizes your active Gmail threads, Google Calendar meetings, Drive documents, and Notion project pages to infer context and automate progress tracking.
+                  NexOrbit continuously synchronizes your active Gmail threads, Google Calendar meetings, Drive documents, and Notion project pages to infer context and automate progress tracking.
                 </p>
               </div>
 

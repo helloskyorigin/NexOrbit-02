@@ -26,35 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return 'en';
   });
 
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedSession = localStorage.getItem('nexorbit_auth_session');
-        if (storedSession) {
-          const parsed = JSON.parse(storedSession);
-          if (parsed && parsed.uid) {
-            return parsed;
-          }
-        }
-      } catch (e) {}
-    }
-    return null;
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedSession = localStorage.getItem('nexorbit_auth_session');
-        if (storedSession) {
-          const parsed = JSON.parse(storedSession);
-          if (parsed && parsed.uid) {
-            return true;
-          }
-        }
-      } catch (e) {}
-    }
-    return false;
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const [authInitializing, setAuthInitializing] = useState<boolean>(true);
   const [authView, setAuthView] = useState<AuthView>('welcome');

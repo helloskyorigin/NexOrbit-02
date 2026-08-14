@@ -1,5 +1,5 @@
 export const NEXORBIT_CONFIG = {
-  appName: 'NEXORBIT',
+  appName: 'NexOrbit',
   tagline: 'Your AI Brain for the Digital World.',
   version: '1.0.0-phase1',
   

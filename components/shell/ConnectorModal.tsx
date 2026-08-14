@@ -64,7 +64,7 @@ export const CONNECTOR_DATA: Record<ConnectorId, ConnectorInfo> = {
     name: 'Notion',
     type: 'Workspace Integration',
     connected: false,
-    description: 'Extracts knowledge, project databases, and personal notes into NEXORBIT.',
+    description: 'Extracts knowledge, project databases, and personal notes into NexOrbit.',
     permissions: ['Page content & database entries', 'Workspace page structure', 'Task status updates'],
   },
   github: {
@@ -183,11 +183,11 @@ export const ConnectorModal: React.FC<ConnectorModalProps> = ({ connectorId, onC
         {/* Description */}
         <p className="text-xs text-slate-600 leading-relaxed">{connector.description}</p>
 
-        {/* Permissions / What NEXORBIT Uses */}
+        {/* Permissions / What NexOrbit Uses */}
         <div className="space-y-2">
           <h5 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-            What NEXORBIT Uses
+            What NexOrbit Uses
           </h5>
           <div className="rounded-xl bg-white border border-slate-200/80 p-3 space-y-2">
             {connector.permissions.map((perm, idx) => (

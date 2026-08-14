@@ -38,7 +38,7 @@ export const AIResponse: React.FC<AIResponseProps> = ({
     addToast({
       type: 'success',
       title: 'Copied to Clipboard',
-      description: 'NEXORBIT findings copied successfully.',
+      description: 'NexOrbit findings copied successfully.',
     });
     setTimeout(() => setIsCopied(false), 2000);
   };
@@ -79,7 +79,7 @@ export const AIResponse: React.FC<AIResponseProps> = ({
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-slate-950 tracking-tight">
-                NEXORBIT
+                NexOrbit
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100/60 shadow-2xs">
                 AI Brain

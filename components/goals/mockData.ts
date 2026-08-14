@@ -89,7 +89,7 @@ export const INITIAL_GOALS: GoalItem[] = [
       },
     ],
     aiReasoning:
-      'NEXORBIT detected 3 unresolved dependency threads in Gmail and an upcoming client sync. Finishing the pricing tier today unlocks the next 2 milestones.',
+      'NexOrbit detected 3 unresolved dependency threads in Gmail and an upcoming client sync. Finishing the pricing tier today unlocks the next 2 milestones.',
     blockers: [
       'Awaiting legal sign-off on enterprise indemnity clause in Drive contract draft.',
       'Pricing model needs final confirmation with Product Strategy.',

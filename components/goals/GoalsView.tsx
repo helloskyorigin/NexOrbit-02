@@ -139,7 +139,7 @@ export const GoalsView: React.FC<GoalsViewProps> = ({ onNavigate }) => {
     );
     addToast({
       title: 'Goal Pacing Updated',
-      description: 'Pacing schedule recalculated in NEXORBIT.',
+      description: 'Pacing schedule recalculated in NexOrbit.',
       type: 'info',
     });
   };

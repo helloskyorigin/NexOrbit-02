@@ -32,12 +32,12 @@ export const ContextIndicator: React.FC<ContextIndicatorProps> = ({ className })
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Connected Workspace Context"
-        description="NEXORBIT Active Retrieval Scope"
+        description="NexOrbit Active Retrieval Scope"
         maxWidth="md"
       >
         <div className="space-y-4 text-xs">
           <p className="text-slate-600 leading-relaxed">
-            NEXORBIT evaluates relevance across all your connected workspace applications in real time without sending raw data to external servers.
+            NexOrbit evaluates relevance across all your connected workspace applications in real time without sending raw data to external servers.
           </p>
 
           <div className="space-y-2">
