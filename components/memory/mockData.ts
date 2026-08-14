@@ -1,0 +1,267 @@
+'use client';
+
+import {
+  MemoryItem,
+  ConnectedSourceStat,
+  RecentPersonItem,
+  CategoryStat,
+  MemorySettingsConfig,
+} from './types';
+
+export const INITIAL_MEMORIES: MemoryItem[] = [
+  // TODAY
+  {
+    id: 'mem-1',
+    title: 'Rahul mentioned budget for Project Alpha',
+    description: 'Rahul shared that the beta launch budget is approved up to ₹12L.',
+    category: 'Projects',
+    source: {
+      type: 'gmail',
+      name: 'Gmail',
+      email: 'rahul@nexorbit.ai',
+      detail: 'Subject: Re: Project Alpha Beta Launch Allocations & Timeline',
+      url: 'https://mail.google.com/mail/u/0/#inbox/FMfcgzGvX',
+    },
+    tag: 'Project Alpha',
+    timestamp: '9:42 AM',
+    dateGroup: 'Today',
+    dotColor: 'purple',
+    relatedPerson: 'Rahul Verma',
+    relatedPersonRole: 'Product & Finance Lead',
+    relatedProject: 'Project Alpha',
+    strength: 5,
+    isPinned: true,
+    relatedMemories: [
+      {
+        id: 'mem-2',
+        title: 'Project Alpha Launch Review meeting',
+        time: '8:15 AM',
+        source: 'Google Calendar',
+      },
+      {
+        id: 'mem-3',
+        title: 'Updated PRD for Project Alpha',
+        time: '7:30 AM',
+        source: 'Notion',
+      },
+    ],
+  },
+  {
+    id: 'mem-2',
+    title: 'Project Alpha Launch Review meeting',
+    description: 'You have a review meeting with the team to finalize the go-to-market plan.',
+    category: 'Projects',
+    source: {
+      type: 'calendar',
+      name: 'Google Calendar',
+      detail: 'Event: Project Alpha Launch Review with Core Leads',
+      url: 'https://calendar.google.com/event?eid=YWxwaGFyZXZpZXc',
+    },
+    tag: 'Event',
+    timestamp: '8:15 AM',
+    dateGroup: 'Today',
+    dotColor: 'blue',
+    relatedPerson: 'Rahul Verma',
+    relatedProject: 'Project Alpha',
+    strength: 5,
+    relatedMemories: [
+      {
+        id: 'mem-1',
+        title: 'Rahul mentioned budget for Project Alpha',
+        time: '9:42 AM',
+        source: 'Gmail',
+      },
+    ],
+  },
+  {
+    id: 'mem-3',
+    title: 'Updated PRD for Project Alpha',
+    description: 'You updated the PRD with new requirements for analytics and reporting.',
+    category: 'Knowledge',
+    source: {
+      type: 'notion',
+      name: 'Notion',
+      detail: 'Page: /Engineering/PRD-Alpha-v2.4',
+      path: 'Project Alpha',
+      url: 'https://notion.so/workspace/prd-alpha-v24',
+    },
+    tag: 'Document',
+    timestamp: '7:30 AM',
+    dateGroup: 'Today',
+    dotColor: 'purple',
+    relatedProject: 'Project Alpha',
+    strength: 4,
+  },
+
+  // YESTERDAY
+  {
+    id: 'mem-4',
+    title: 'Competitor analysis for Project Alpha',
+    description: 'You uploaded a competitive analysis report for reference.',
+    category: 'Knowledge',
+    source: {
+      type: 'drive',
+      name: 'Google Drive',
+      detail: 'File: Alpha_Q3_Competitive_Landscape.pdf',
+      path: '/Project Alpha/Research',
+      url: 'https://drive.google.com/file/d/14x89zAlpha/view',
+    },
+    tag: 'File',
+    timestamp: '6:45 PM',
+    dateGroup: 'Yesterday',
+    dotColor: 'purple',
+    relatedProject: 'Project Alpha',
+    strength: 4,
+  },
+  {
+    id: 'mem-5',
+    title: 'You met with Ananya Sharma',
+    description: 'Discussed partnership opportunities and joint marketing ideas.',
+    category: 'People',
+    source: {
+      type: 'meeting',
+      name: 'Meeting',
+      detail: 'Memory from meeting notes • Google Meet & Otter Sync',
+      url: 'https://meet.google.com/syn-meet-ananya',
+    },
+    tag: 'People',
+    timestamp: '4:20 PM',
+    dateGroup: 'Yesterday',
+    dotColor: 'green',
+    relatedPerson: 'Ananya Sharma',
+    relatedPersonRole: 'Partnerships & Growth Director',
+    strength: 5,
+    relatedMemories: [
+      {
+        id: 'mem-6',
+        title: 'You decided to focus on B2B SaaS segment',
+        time: '2:10 PM',
+        source: 'Decision Log',
+      },
+    ],
+  },
+  {
+    id: 'mem-6',
+    title: 'You decided to focus on B2B SaaS segment',
+    description: 'Decision logged from your strategy session.',
+    category: 'Decisions',
+    source: {
+      type: 'decision',
+      name: 'Decision',
+      detail: 'Executive Strategy Synthesis session #4',
+    },
+    tag: 'Decision',
+    timestamp: '2:10 PM',
+    dateGroup: 'Yesterday',
+    dotColor: 'amber',
+    strength: 5,
+    relatedProject: 'Project Alpha',
+  },
+
+  // EARLIER THIS WEEK
+  {
+    id: 'mem-7',
+    title: 'Arjun preferred simplified token color palette',
+    description: 'Arjun noted that our design tokens need high contrast light-mode neutrals for WCAG AA compliance.',
+    category: 'Preferences',
+    source: {
+      type: 'slack',
+      name: 'Slack',
+      detail: '#design-systems thread: "Token palette refinements"',
+    },
+    tag: 'Preference',
+    timestamp: 'May 18, 3:15 PM',
+    dateGroup: 'Earlier this week',
+    dotColor: 'purple',
+    relatedPerson: 'Arjun Mehta',
+    relatedPersonRole: 'Lead Product Designer',
+    strength: 4,
+  },
+  {
+    id: 'mem-8',
+    title: 'Locked Stripe billing webhook secret configuration',
+    description: 'API webhook endpoints verified with zero latency across cloud run production environment.',
+    category: 'Knowledge',
+    source: {
+      type: 'notion',
+      name: 'Notion',
+      detail: 'DevOps / Stripe Webhook Guide',
+    },
+    tag: 'Document',
+    timestamp: 'May 17, 11:30 AM',
+    dateGroup: 'Earlier this week',
+    dotColor: 'blue',
+    relatedProject: 'Project Alpha',
+    strength: 5,
+  },
+  {
+    id: 'mem-9',
+    title: 'Decided to defer iOS widget build until Q4',
+    description: 'Prioritizing web desktop and responsive mobile drawer workflows first before native widget companion.',
+    category: 'Decisions',
+    source: {
+      type: 'decision',
+      name: 'Decision',
+      detail: 'Roadmap Milestone Prioritization meeting',
+    },
+    tag: 'Decision',
+    timestamp: 'May 16, 5:40 PM',
+    dateGroup: 'Earlier this week',
+    dotColor: 'amber',
+    strength: 4,
+  },
+];
+
+export const CATEGORY_STATS: CategoryStat[] = [
+  { category: 'People', count: 245, iconName: 'Users', color: '#6366F1' },
+  { category: 'Preferences', count: 312, iconName: 'Sliders', color: '#8B5CF6' },
+  { category: 'Projects', count: 428, iconName: 'Folder', color: '#3B82F6' },
+  { category: 'Knowledge', count: 198, iconName: 'BookOpen', color: '#EC4899' },
+  { category: 'Decisions', count: 65, iconName: 'Star', color: '#F59E0B' },
+];
+
+export const CONNECTED_SOURCES_STATS: ConnectedSourceStat[] = [
+  { id: 'src-1', name: 'Gmail', type: 'gmail', count: 432, color: '#EA4335' },
+  { id: 'src-2', name: 'Google Calendar', type: 'calendar', count: 256, color: '#2684FC' },
+  { id: 'src-3', name: 'Google Drive', type: 'drive', count: 198, color: '#00AC47' },
+  { id: 'src-4', name: 'Notion', type: 'notion', count: 156, color: '#111827' },
+];
+
+export const RECENT_PEOPLE: RecentPersonItem[] = [
+  {
+    id: 'p-1',
+    name: 'Rahul Verma',
+    subtitle: 'Project updates, budget',
+    time: 'Just now',
+    initials: 'RV',
+    avatarColor: 'bg-indigo-600',
+    memoryCount: 18,
+  },
+  {
+    id: 'p-2',
+    name: 'Ananya Sharma',
+    subtitle: 'Partnership discussion',
+    time: 'Yesterday',
+    initials: 'AS',
+    avatarColor: 'bg-rose-500',
+    memoryCount: 12,
+  },
+  {
+    id: 'p-3',
+    name: 'Arjun Mehta',
+    subtitle: 'Design system feedback',
+    time: '2d ago',
+    initials: 'AM',
+    avatarColor: 'bg-amber-600',
+    memoryCount: 9,
+  },
+];
+
+export const DEFAULT_MEMORY_SETTINGS: MemorySettingsConfig = {
+  autoRememberContext: true,
+  rememberConversations: true,
+  rememberPreferences: true,
+  rememberProjectContext: true,
+  allowCrossAppContext: true,
+  retentionPeriod: 'forever',
+};

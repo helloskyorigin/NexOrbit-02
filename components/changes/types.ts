@@ -1,0 +1,86 @@
+'use client';
+
+export type ChangeImportance = 'important' | 'relevant' | 'informational';
+
+export type CategoryFilter = 
+  | 'all' 
+  | 'messages' 
+  | 'calendar' 
+  | 'documents' 
+  | 'tasks' 
+  | 'mentions';
+
+export type ConnectorSourceId = 
+  | 'gmail' 
+  | 'calendar' 
+  | 'drive' 
+  | 'slack' 
+  | 'notion' 
+  | 'github' 
+  | 'asana';
+
+export interface RelatedSourceContext {
+  sourceId: ConnectorSourceId;
+  sourceName: string;
+  title: string;
+  snippet?: string;
+  timestamp?: string;
+}
+
+export interface SubChangeItem {
+  id: string;
+  title: string;
+  contextSnippet: string;
+  sourceId: ConnectorSourceId;
+  sourceName: string;
+  timestamp: string;
+  personName?: string;
+  personAvatar?: string;
+}
+
+export interface ChangeFeedItem {
+  id: string;
+  title: string;
+  contextSubtitle: string;
+  sourceId: ConnectorSourceId;
+  sourceName: string;
+  timeSection: 'Earlier Today' | 'Yesterday' | 'Earlier';
+  timestamp: string;
+  importance: ChangeImportance; // important = amber/red, relevant = blue/indigo, informational = neutral/green
+  category: CategoryFilter;
+  isRead: boolean;
+  
+  // Visual indicators
+  iconType: 'mail' | 'calendar' | 'doc' | 'task' | 'mention' | 'code';
+  personName?: string;
+  personAvatar?: string;
+  additionalPersonCount?: number;
+  badgeDotColor?: 'purple' | 'blue' | 'emerald' | 'amber';
+
+  // AI Interpretation Breakdown
+  whatChanged: string;
+  whyItMatters: string;
+  relatedContext: RelatedSourceContext[];
+  recommendedAction?: {
+    label: string;
+    actionType: 'review_conflict' | 'prepare_response' | 'open_source' | 'reschedule' | 'view_task';
+  };
+
+  // Grouped changes support
+  isGroup?: boolean;
+  groupProjectName?: string;
+  subChanges?: SubChangeItem[];
+}
+
+export interface ActiveSourceStat {
+  sourceId: ConnectorSourceId;
+  sourceName: string;
+  count: number;
+}
+
+export interface ViewToggleControls {
+  connectedApps: boolean;
+  yourTeam: boolean; // or myGoals
+  mentions: boolean;
+  tasksAndProjects: boolean;
+}

@@ -1,0 +1,169 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated and accessing their own data
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User Profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Subscription Data
+    match /subscriptions/{subscriptionId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Credit Balances
+    match /creditBalances/{userId} {
+      allow read: if isOwner(userId);
+      // Credit mutations must go through server-authoritative API
+      allow write: if false; 
+    }
+
+    // Credit Usage Logs
+    match /creditUsages/{usageId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if false; // Server authoritative
+    }
+
+    // Connectors & Connector Permissions
+    match /connectors/{connectorId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    match /connectorPermissions/{permissionId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Memories
+    match /memories/{memoryId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Goals
+    match /goals/{goalId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Projects
+    match /projects/{projectId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // People
+    match /people/{personId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Documents
+    match /documents/{documentId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Conversations & Messages
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && (
+          (resource != null && resource.data.userId == request.auth.uid) ||
+          (request.resource != null && request.resource.data.userId == request.auth.uid)
+        );
+      }
+    }
+
+    // Context Items & Relationships
+    match /contextItems/{itemId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    match /contextRelationships/{relId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Tasks & Actions & Approvals
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    match /actions/{actionId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    match /actionApprovals/{approvalId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Evidence
+    match /evidences/{evidenceId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && (
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        (request.resource != null && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Usage Events
+    match /usageEvents/{eventId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if false; // Server-only
+    }
+  }
+}
