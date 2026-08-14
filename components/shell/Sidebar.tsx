@@ -169,12 +169,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-7 w-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
-                N
+              <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
+                S
               </div>
-              <span className="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
-                NEXORBIT
-              </span>
+              <div className="min-w-0 text-left">
+                <div className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                  Satyam
+                </div>
+                <div className="text-[10px] text-slate-500 font-normal truncate">
+                  Free Plan
+                </div>
+              </div>
             </div>
             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
           </div>

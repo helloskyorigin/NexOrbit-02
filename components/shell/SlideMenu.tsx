@@ -11,9 +11,6 @@ import {
   Settings as SettingsIcon,
   HelpCircle,
   X,
-  ChevronRight,
-  LogOut,
-  Shield,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ConnectorId } from './ConnectorModal';
@@ -24,11 +21,13 @@ export interface SlideMenuProps {
   activePage: string;
   onSelectPage: (pageId: string) => void;
   onOpenConnector?: (connectorId: ConnectorId) => void;
+  userName?: string;
+  userEmail?: string;
 }
 
 const MENU_ITEMS = [
   { id: 'home', label: 'Home', icon: <Home className="h-5 w-5" /> },
-  { id: 'chat', label: 'Chat', icon: <MessageSquare className="h-5 w-5" />, badge: 'AI' },
+  { id: 'chat', label: 'Chat', icon: <MessageSquare className="h-5 w-5" /> },
   { id: 'what-changed', label: 'What Changed', icon: <History className="h-5 w-5" /> },
   { id: 'clean-my-day', label: 'Clean My Day', icon: <Sparkles className="h-5 w-5" /> },
   { id: 'memory', label: 'Memory', icon: <Box className="h-5 w-5" /> },
@@ -42,7 +41,8 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
   onClose,
   activePage,
   onSelectPage,
-  onOpenConnector,
+  userName = 'Satyam',
+  userEmail = 'satyam@nexorbit.ai',
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -65,7 +65,7 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-fadeIn"
+        className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs transition-opacity animate-fadeIn"
       />
 
       {/* Drawer Surface */}
@@ -74,15 +74,15 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-2xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
-                <Sparkles className="h-4 w-4" />
+              <div className="h-9 w-9 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-600/20">
+                <Sparkles className="h-4.5 w-4.5" />
               </div>
               <div>
                 <h2 className="text-base font-extrabold tracking-tight text-slate-950 leading-none">
                   NEXORBIT
                 </h2>
-                <span className="text-[10px] font-bold text-indigo-600 tracking-widest uppercase">
-                  AI Workspace
+                <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                  AI BRAIN
                 </span>
               </div>
             </div>
@@ -98,12 +98,12 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
 
           {/* User Preview */}
           <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
-              A
+            <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+              {userName.charAt(0) || 'S'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-900 truncate">Aryan Mehta</p>
-              <p className="text-[11px] text-slate-500 truncate">aryan@nexorbit.ai</p>
+              <p className="text-xs font-bold text-slate-900 truncate">{userName}</p>
+              <p className="text-[11px] text-slate-500 truncate">{userEmail}</p>
             </div>
           </div>
 
@@ -125,22 +125,16 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
                   className={cn(
                     'w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all duration-150 text-left cursor-pointer',
                     isActive
-                      ? 'bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-2xs font-bold'
+                      ? 'bg-blue-50/90 text-blue-600 shadow-3xs font-bold'
                       : 'text-slate-700 hover:text-slate-950 hover:bg-slate-50'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={isActive ? 'text-indigo-600' : 'text-slate-400'}>
+                    <span className={isActive ? 'text-blue-600' : 'text-slate-400'}>
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
                   </div>
-
-                  {item.badge && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-100 text-indigo-700">
-                      {item.badge}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -158,7 +152,7 @@ export const SlideMenu: React.FC<SlideMenuProps> = ({
           </div>
 
           <div className="text-[10px] text-slate-400 text-center font-medium">
-            NEXORBIT v2.4 • Confidential Preview
+            NEXORBIT • Free Plan
           </div>
         </div>
       </div>
