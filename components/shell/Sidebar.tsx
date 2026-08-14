@@ -24,10 +24,9 @@ export interface NavItem {
 
 export const MAIN_NAV_ITEMS: NavItem[] = [
   { id: 'home', label: 'Home', icon: <Home className="h-[18px] w-[18px]" /> },
-  { id: 'ask-my-world', label: 'Ask My World', icon: <MessageSquare className="h-[18px] w-[18px]" /> },
+  { id: 'chat', label: 'Chat', icon: <MessageSquare className="h-[18px] w-[18px]" /> },
   { id: 'what-changed', label: 'What Changed', icon: <History className="h-[18px] w-[18px]" /> },
   { id: 'clean-my-day', label: 'Clean My Day', icon: <Sparkles className="h-[18px] w-[18px]" /> },
-  { id: 'goals', label: 'Goals', icon: <Target className="h-[18px] w-[18px]" /> },
   { id: 'memory', label: 'Memory', icon: <Box className="h-[18px] w-[18px]" /> },
   { id: 'connected-apps', label: 'Connected Apps', icon: <LayoutGrid className="h-[18px] w-[18px]" /> },
 ];
@@ -115,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const isActive =
               activePage === item.id ||
               (item.id === 'connected-apps' && activePage === 'connectors') ||
-              (item.id === 'ask-my-world' && activePage === 'ask');
+              (item.id === 'chat' && (activePage === 'ask' || activePage === 'ask-my-world'));
 
             return (
               <button

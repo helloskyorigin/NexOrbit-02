@@ -23,6 +23,8 @@ import {
 import { cn } from '../../lib/utils';
 import { ConnectorId } from '../shell/ConnectorModal';
 import { useToast } from '../ui/Toast';
+import { ModeSelector } from '../chat/ModeSelector';
+import { AIMode } from '../chat/types';
 
 export interface HomeDashboardProps {
   onNavigate: (pageId: string) => void;
@@ -39,17 +41,22 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 }) => {
   const { addToast } = useToast();
   const [commandText, setCommandText] = useState('');
+  const [currentMode, setCurrentMode] = useState<AIMode>('auto');
 
-  const handleCommandSubmit = (e?: React.FormEvent) => {
+  const handleCommandSubmit = (e?: React.FormEvent, customQuery?: string, customMode?: AIMode) => {
     if (e) e.preventDefault();
-    if (!commandText.trim()) return;
+    const queryToSend = customQuery !== undefined ? customQuery : commandText;
+    const modeToSend = customMode || currentMode;
+
+    if (!queryToSend.trim()) return;
 
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('pending_ask_command', commandText);
+      sessionStorage.setItem('pending_ask_command', queryToSend.trim());
+      sessionStorage.setItem('pending_chat_mode', modeToSend);
     }
     
     if (onNavigate) {
-      onNavigate('ask-my-world');
+      onNavigate('chat');
     }
   };
 
@@ -244,20 +251,38 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               type="text"
               value={commandText}
               onChange={(e) => setCommandText(e.target.value)}
-              placeholder="What can NEXORBIT help you with?"
-              className="w-full bg-transparent text-slate-900 placeholder:text-slate-400 text-[15px] sm:text-base focus:outline-none px-2 pt-1 font-normal"
+              placeholder="Ask anything, write, brainstorm, or search your connected world..."
+              className="w-full bg-transparent text-slate-900 placeholder:text-slate-400 text-[14.5px] sm:text-base focus:outline-none px-2 pt-1 font-normal"
             />
             
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <button type="button" className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+            <div className="flex items-center justify-between px-1 gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Mode Selector */}
+                <ModeSelector
+                  currentMode={currentMode}
+                  onChangeMode={setCurrentMode}
+                  variant="compact"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCommandSubmit(undefined, commandText || 'Upload files for context');
+                  }}
+                  className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  title="Attach file"
+                >
                   <Paperclip className="h-4 w-4" />
                 </button>
-                <button type="button" className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCommandSubmit(undefined, commandText || 'Voice input briefing');
+                  }}
+                  className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  title="Voice command"
+                >
                   <Mic className="h-4 w-4" />
-                </button>
-                <button type="button" className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors hidden sm:flex">
-                  <Globe className="h-4 w-4" />
                 </button>
               </div>
 
@@ -273,21 +298,25 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </div>
         </form>
 
-        {/* QUICK SUGGESTIONS */}
+        {/* QUICK SUGGESTIONS (General AI + Connected World) */}
         <div className="relative -mx-4 sm:mx-0">
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 block sm:hidden" />
           <div className="flex overflow-x-auto scrollbar-hide pb-2 pt-3 px-5 sm:px-1 gap-2 snap-x snap-mandatory">
             {[
-              'What changed since yesterday?',
-              'Do I have any deadline conflicts?',
-              'What should I focus on today?'
-            ].map((suggestion, i) => (
+              { text: 'What is quantum computing?', mode: 'general' as AIMode },
+              { text: 'Where is the Project Alpha proposal?', mode: 'connected' as AIMode },
+              { text: 'What changed since yesterday?', mode: 'auto' as AIMode },
+              { text: 'Write a professional email update', mode: 'general' as AIMode },
+              { text: 'What meetings do I have tomorrow?', mode: 'connected' as AIMode },
+            ].map((s, i) => (
               <button
                 key={i}
-                onClick={() => setCommandText(suggestion)}
-                className="snap-start shrink-0 bg-white/70 hover:bg-white border border-slate-200/80 text-slate-600 text-[13px] px-3.5 py-2 rounded-xl shadow-3xs hover:shadow-sm transition-all whitespace-nowrap"
+                type="button"
+                onClick={() => handleCommandSubmit(undefined, s.text, s.mode)}
+                className="snap-start shrink-0 bg-white/80 hover:bg-white border border-slate-200/80 hover:border-indigo-200 text-slate-700 hover:text-indigo-900 text-[12.5px] px-3.5 py-2 rounded-xl shadow-3xs hover:shadow-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
               >
-                {suggestion}
+                <Sparkles className="h-3 w-3 text-indigo-500" />
+                <span>{s.text}</span>
               </button>
             ))}
           </div>

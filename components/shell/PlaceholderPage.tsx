@@ -37,12 +37,12 @@ export const PAGE_CONFIG: Record<string, PageMeta> = {
     icon: <Home className="h-5 w-5 text-indigo-600" />,
     badgeText: 'Phase 1 Shell Active',
   },
-  'ask-my-world': {
-    id: 'ask-my-world',
-    title: 'Ask My World',
-    subtitle: 'Your personal AI context interface will appear here.',
+  chat: {
+    id: 'chat',
+    title: 'Chat',
+    subtitle: 'Your universal AI assistant and connected world workspace.',
     icon: <Brain className="h-5 w-5 text-indigo-600" />,
-    badgeText: 'Context Gateway',
+    badgeText: 'AI Workspace',
   },
   'what-changed': {
     id: 'what-changed',
@@ -58,19 +58,19 @@ export const PAGE_CONFIG: Record<string, PageMeta> = {
     icon: <CheckSquare className="h-5 w-5 text-indigo-600" />,
     badgeText: 'Daily Focus',
   },
-  goals: {
-    id: 'goals',
-    title: 'Goals',
-    subtitle: 'Your long-term goals and progress alignment will appear here.',
-    icon: <Target className="h-5 w-5 text-indigo-600" />,
-    badgeText: 'Alignment Engine',
-  },
   memory: {
     id: 'memory',
     title: 'Memory',
     subtitle: 'Your personal AI context and preference memories will appear here.',
     icon: <Cpu className="h-5 w-5 text-indigo-600" />,
     badgeText: 'Vector Knowledge',
+  },
+  'connected-apps': {
+    id: 'connected-apps',
+    title: 'Connected Apps',
+    subtitle: 'Manage workspace integrations, permissions, and synchronization.',
+    icon: <Layers className="h-5 w-5 text-indigo-600" />,
+    badgeText: 'Connectors',
   },
   settings: {
     id: 'settings',

@@ -1,4 +1,4 @@
-export type ConnectorType = 'gmail' | 'calendar' | 'drive' | 'notion' | 'github';
+export type ConnectorType = 'gmail' | 'calendar' | 'drive' | 'notion' | 'github' | 'slack' | 'linear';
 
 export interface SourceItem {
   id: string;
