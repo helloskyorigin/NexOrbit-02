@@ -1,11 +1,23 @@
-export type ConnectorId = 'gmail' | 'calendar' | 'drive' | 'notion' | 'github';
+export type ConnectorId =
+  | 'gmail'
+  | 'calendar'
+  | 'drive'
+  | 'notion'
+  | 'github'
+  | 'slack'
+  | 'outlook'
+  | 'onedrive'
+  | 'dropbox';
 
 export type SyncState =
   | 'connected'
+  | 'connecting'
   | 'syncing'
   | 'up_to_date'
   | 'needs_attention'
   | 'not_connected'
+  | 'connection_failed'
+  | 'reconnecting'
   | 'error';
 
 export interface ConnectorPermissionItem {
@@ -17,8 +29,9 @@ export interface ConnectorPermissionItem {
 export interface ConnectorItem {
   id: ConnectorId;
   name: string;
-  category: 'Google Workspace' | 'Workspace Integration' | 'Developer Platform';
+  category: 'Google Workspace' | 'Workspace Integration' | 'Developer Platform' | 'Productivity';
   description: string;
+  humanPermissionSummary: string; // Human-readable permission description
   status: SyncState;
   statusLabel: string;
   lastSynced?: string;

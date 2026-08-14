@@ -73,7 +73,9 @@ export const AppShell: React.FC<AppShellProps> = ({
     activePage === 'what-changed' ||
     activePage === 'clean-my-day' ||
     activePage === 'memory' ||
-    activePage === 'settings';
+    activePage === 'settings' ||
+    activePage === 'connected-apps' ||
+    activePage === 'connectors';
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased transition-colors duration-200">

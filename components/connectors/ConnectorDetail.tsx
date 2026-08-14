@@ -4,10 +4,9 @@ import React, { useState } from 'react';
 import { ConnectorItem } from './types';
 import { ConnectorIcon } from './ConnectorIcon';
 import { ConnectorStatus } from './ConnectorStatus';
-import { PermissionPanel } from './PermissionPanel';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { RefreshCw, Shield, Trash2, ArrowRight, CheckCircle2, Clock, Layers } from 'lucide-react';
+import { RefreshCw, Shield, Trash2, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useToast } from '../ui/Toast';
 import { cn } from '../../lib/utils';
 
@@ -27,7 +26,6 @@ export const ConnectorDetail: React.FC<ConnectorDetailProps> = ({
   onRequestDisconnect,
 }) => {
   const { addToast } = useToast();
-  const [showPermissions, setShowPermissions] = useState(false);
   const [isSyncingLocal, setIsSyncingLocal] = useState(false);
 
   if (!connector) return null;
@@ -40,36 +38,31 @@ export const ConnectorDetail: React.FC<ConnectorDetailProps> = ({
       addToast({
         type: 'success',
         title: `${connector.name} Synced`,
-        description: `Resynced ${connector.name} context.`,
+        description: `Successfully resynced ${connector.name} context.`,
       });
-    }, 1200);
+    }, 1000);
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {
-        setShowPermissions(false);
-        onClose();
-      }}
+      onClose={onClose}
       title={connector.name}
-      description={`${connector.category} Integration`}
+      description="Manage Connection & Scope"
       maxWidth="md"
       footer={
         <div className="flex items-center justify-between w-full">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              onRequestDisconnect(connector);
-            }}
-            leftIcon={<Trash2 className="h-3.5 w-3.5 text-red-500" />}
-            className="text-red-700 hover:bg-red-50 border-red-200 text-xs font-semibold h-8"
+            onClick={() => onRequestDisconnect(connector)}
+            leftIcon={<Trash2 className="h-3.5 w-3.5 text-rose-500" />}
+            className="text-rose-700 hover:bg-rose-50 border-rose-200 text-xs font-semibold h-8.5 rounded-xl cursor-pointer"
           >
             Disconnect
           </Button>
 
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-xs font-medium cursor-pointer">
             Close
           </Button>
         </div>
@@ -77,15 +70,15 @@ export const ConnectorDetail: React.FC<ConnectorDetailProps> = ({
     >
       <div className="space-y-5 text-xs text-slate-800">
         {/* Connection Header Box */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs shrink-0">
                 <ConnectorIcon id={connector.id} size="lg" />
               </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-slate-900 tracking-tight">{connector.name}</h3>
-                <p className="text-xs text-slate-500 font-medium">Your {connector.name} context is available to NEXORBIT.</p>
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-bold text-slate-900 tracking-tight">{connector.name}</h3>
+                <p className="text-xs text-slate-500 font-normal">{connector.category}</p>
               </div>
             </div>
 
@@ -95,36 +88,29 @@ export const ConnectorDetail: React.FC<ConnectorDetailProps> = ({
           </div>
         </div>
 
-        {/* CONTEXT AVAILABLE */}
+        {/* HUMAN-READABLE PERMISSION SCOPE */}
         <div className="space-y-2">
-          <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px] block">
-            Context available
+          <span className="font-bold text-slate-900 uppercase tracking-wider text-[10px] block">
+            Approved Access Scope
           </span>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-            <div className="flex items-center justify-between font-bold text-slate-900 text-xs pb-1 border-b border-slate-200/60">
-              <span>Primary source items</span>
-              <span className="text-indigo-600 font-extrabold">{connector.contextCount || 'Indexed'}</span>
+          <div className="p-3.5 rounded-2xl bg-blue-50/40 border border-blue-100/80 space-y-2">
+            <div className="flex items-start gap-2 text-slate-900 font-semibold text-xs">
+              <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+              <span>{connector.humanPermissionSummary}</span>
             </div>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {(connector.contextItems || ['Context signals', 'Metadata', 'Activity threads']).map((item, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-semibold text-[11px]"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed pl-6">
+              NEXORBIT only accesses data relevant to your daily focus and query answers.
+            </p>
           </div>
         </div>
 
-        {/* LAST SYNC & SYNC NOW ACTION */}
-        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+        {/* LAST SYNC STATUS & ACTION */}
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Last Sync</span>
-            <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sync Status</span>
+            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-slate-400" />
-              {isSyncingLocal ? 'Syncing...' : connector.lastSynced || 'Just now'}
+              {isSyncingLocal ? 'Syncing now...' : connector.lastSynced || 'Synced just now'}
             </span>
           </div>
 
@@ -133,45 +119,26 @@ export const ConnectorDetail: React.FC<ConnectorDetailProps> = ({
             size="sm"
             onClick={handleSyncClick}
             disabled={isSyncingLocal}
-            leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isSyncingLocal && 'animate-spin text-indigo-600')} />}
-            className="bg-white hover:bg-slate-50 border-slate-200 text-slate-800 text-xs font-semibold h-8 shrink-0"
+            leftIcon={<RefreshCw className={cn('h-3.5 w-3.5', isSyncingLocal && 'animate-spin text-blue-600')} />}
+            className="bg-white hover:bg-slate-50 border-slate-200 text-slate-800 text-xs font-semibold h-8.5 rounded-xl shrink-0 cursor-pointer"
           >
             {isSyncingLocal ? 'Syncing...' : 'Sync now'}
           </Button>
         </div>
 
-        {/* PERMISSIONS SECTION TOGGLE */}
-        <div className="pt-2 border-t border-slate-100">
-          {!showPermissions ? (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-indigo-50/60 border border-indigo-100/90 text-indigo-950">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-indigo-600 shrink-0" />
-                <span className="font-bold text-xs">Permissions &amp; Data Controls</span>
+        {/* DETAILED PERMISSION LIST */}
+        <div className="space-y-2 pt-1 border-t border-slate-100">
+          <span className="font-bold text-slate-900 uppercase tracking-wider text-[10px] block">
+            Usage Breakdown
+          </span>
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+            {connector.uses.map((useItem, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-slate-700 font-medium text-[11px]">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <span>{useItem}</span>
               </div>
-              <button
-                onClick={() => setShowPermissions(true)}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-              >
-                <span>View details</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Configured Permissions
-                </span>
-                <button
-                  onClick={() => setShowPermissions(false)}
-                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800"
-                >
-                  Hide details
-                </button>
-              </div>
-              <PermissionPanel connector={connector} />
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </Modal>

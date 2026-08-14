@@ -19,7 +19,7 @@ export const ConnectorGrid: React.FC<ConnectorGridProps> = ({
   className,
 }) => {
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5', className)}>
+    <div className={cn('space-y-3', className)}>
       {connectors.map((connector) => (
         <ConnectorCard
           key={connector.id}

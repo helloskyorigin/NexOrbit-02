@@ -5,7 +5,7 @@ import { ConnectorItem } from './types';
 import { ConnectorIcon } from './ConnectorIcon';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Check, ShieldCheck, Lock, AlertCircle, RefreshCw } from 'lucide-react';
+import { Check, ShieldCheck, Lock, RefreshCw, AlertCircle } from 'lucide-react';
 import { useToast } from '../ui/Toast';
 
 export interface ConnectModalProps {
@@ -23,18 +23,22 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
 }) => {
   const { addToast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [errorState, setErrorState] = useState(false);
 
   if (!connector) return null;
 
   const handleConnect = () => {
     setIsConnecting(true);
+    setErrorState(false);
+
+    // Simulate OAuth handshake boundary
     setTimeout(() => {
       setIsConnecting(false);
       onConfirmConnect(connector.id);
       addToast({
         type: 'success',
         title: `${connector.name} Connected`,
-        description: `NEXORBIT AI Brain now has secure context access to ${connector.name}.`,
+        description: `NEXORBIT AI Brain now has secure access to ${connector.name}.`,
       });
       onClose();
     }, 1200);
@@ -45,11 +49,11 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`Connect ${connector.name}`}
-      description="Authorize NEXORBIT AI Context Ingestion"
+      description="Authorize NEXORBIT AI Context Integration"
       maxWidth="md"
       footer={
         <div className="flex items-center justify-between w-full">
-          <span className="text-[11px] text-slate-500 flex items-center gap-1">
+          <span className="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
             <Lock className="h-3 w-3 text-emerald-600" />
             256-bit OAuth PKCE
           </span>
@@ -63,7 +67,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
               size="sm"
               onClick={handleConnect}
               disabled={isConnecting}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs h-9 px-4 rounded-xl cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-4 rounded-xl cursor-pointer"
             >
               {isConnecting ? (
                 <>
@@ -83,9 +87,9 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
           <div className="p-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs shrink-0">
             <ConnectorIcon id={connector.id} size="md" />
           </div>
-          <div>
+          <div className="space-y-0.5">
             <h4 className="font-bold text-slate-900 text-sm">{connector.name}</h4>
-            <p className="text-slate-500 text-xs font-medium">{connector.description}</p>
+            <p className="text-slate-500 text-xs font-normal">{connector.humanPermissionSummary}</p>
           </div>
         </div>
 
@@ -94,10 +98,10 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
           <span className="font-bold text-slate-900 text-[11px] uppercase tracking-wider block">
             What NEXORBIT will access:
           </span>
-          <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100/80 space-y-1.5">
+          <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100/80 space-y-1.5">
             {connector.uses.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-indigo-950 font-medium">
-                <Check className="h-3.5 w-3.5 text-indigo-600 shrink-0 mt-0.5" />
+              <div key={idx} className="flex items-start gap-2 text-slate-800 font-medium">
+                <Check className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
                 <span>{item}</span>
               </div>
             ))}
@@ -122,7 +126,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
         {/* Trust disclaimer */}
         <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 flex items-center gap-2 text-emerald-800 text-[11px]">
           <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>You can revoke permissions or disconnect this application at any time with one click.</span>
+          <span>You can revoke permissions or disconnect this application at any time.</span>
         </div>
       </div>
     </Modal>

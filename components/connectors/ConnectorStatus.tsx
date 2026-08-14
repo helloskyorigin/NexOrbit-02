@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, RefreshCw, AlertCircle, AlertTriangle, Circle } from 'lucide-react';
+import { CheckCircle2, RefreshCw, AlertCircle, AlertTriangle, Circle, Loader2 } from 'lucide-react';
 import { SyncState } from './types';
-import { Badge } from '../ui/Badge';
 import { cn } from '../../lib/utils';
 
 export interface ConnectorStatusProps {
@@ -21,59 +20,83 @@ export const ConnectorStatus: React.FC<ConnectorStatusProps> = ({
     case 'connected':
     case 'up_to_date':
       return (
-        <Badge
-          variant="success"
-          size="sm"
-          className={cn('bg-emerald-50 text-emerald-700 border-emerald-200/90 font-medium', className)}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50/80 text-emerald-700 border border-emerald-200/60',
+            className
+          )}
         >
-          <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600 inline shrink-0" />
-          {customLabel || (status === 'up_to_date' ? 'Up to date' : 'Connected')}
-        </Badge>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span>{customLabel || 'Connected'}</span>
+        </span>
       );
+
+    case 'connecting':
     case 'syncing':
       return (
-        <Badge
-          variant="info"
-          size="sm"
-          className={cn('bg-blue-50 text-blue-700 border-blue-200/90 font-medium', className)}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50/80 text-blue-700 border border-blue-200/60',
+            className
+          )}
         >
-          <RefreshCw className="h-3 w-3 mr-1 text-blue-600 animate-spin inline shrink-0" />
-          {customLabel || 'Syncing context...'}
-        </Badge>
+          <Loader2 className="h-3 w-3 text-blue-600 animate-spin shrink-0" />
+          <span>{customLabel || (status === 'connecting' ? 'Connecting...' : 'Syncing...')}</span>
+        </span>
       );
+
+    case 'reconnecting':
+      return (
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50/80 text-amber-800 border border-amber-200/60',
+            className
+          )}
+        >
+          <RefreshCw className="h-3 w-3 text-amber-600 animate-spin shrink-0" />
+          <span>{customLabel || 'Reconnecting...'}</span>
+        </span>
+      );
+
     case 'needs_attention':
       return (
-        <Badge
-          variant="warning"
-          size="sm"
-          className={cn('bg-amber-50 text-amber-800 border-amber-200/90 font-medium', className)}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50/80 text-amber-800 border border-amber-200/60',
+            className
+          )}
         >
-          <AlertTriangle className="h-3 w-3 mr-1 text-amber-600 inline shrink-0" />
-          {customLabel || 'Needs attention'}
-        </Badge>
+          <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
+          <span>{customLabel || 'Needs attention'}</span>
+        </span>
       );
+
+    case 'connection_failed':
     case 'error':
       return (
-        <Badge
-          variant="danger"
-          size="sm"
-          className={cn('bg-red-50 text-red-700 border-red-200/90 font-medium', className)}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50/80 text-rose-700 border border-rose-200/60',
+            className
+          )}
         >
-          <AlertCircle className="h-3 w-3 mr-1 text-red-500 inline shrink-0" />
-          {customLabel || "Couldn't sync. Try again."}
-        </Badge>
+          <AlertCircle className="h-3 w-3 text-rose-600 shrink-0" />
+          <span>{customLabel || 'Connection failed'}</span>
+        </span>
       );
+
     case 'not_connected':
     default:
       return (
-        <Badge
-          variant="default"
-          size="sm"
-          className={cn('bg-slate-100 text-slate-500 border-slate-200 font-medium', className)}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100/80 text-slate-500 border border-slate-200/60',
+            className
+          )}
         >
-          <Circle className="h-2.5 w-2.5 mr-1 text-slate-400 inline shrink-0" />
-          {customLabel || 'Not connected'}
-        </Badge>
+          <Circle className="h-1.5 w-1.5 fill-slate-300 text-slate-300 shrink-0" />
+          <span>{customLabel || 'Not connected'}</span>
+        </span>
       );
   }
 };

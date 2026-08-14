@@ -1,12 +1,12 @@
 export type SettingsTabId =
+  | 'profile'
   | 'general'
   | 'ai-brain'
-  | 'data-privacy'
-  | 'connected-apps'
+  | 'memory-data'
+  | 'privacy-security'
   | 'notifications'
-  | 'interface'
-  | 'shortcuts'
-  | 'billing'
+  | 'appearance'
+  | 'connected-apps'
   | 'advanced';
 
 export interface UserProfile {
@@ -15,41 +15,39 @@ export interface UserProfile {
   role: string;
   nexorbitId: string;
   memberSince: string;
-  avatarUrl: string;
-  bio?: string;
-  timezone?: string;
+  avatarUrl?: string;
+  timezone: string;
+  language: string;
+  plan: 'Free Plan' | 'Pro Plan' | 'Enterprise Plan';
 }
 
 export interface GeneralPreferences {
   language: string;
-  theme: 'light';
-  startupView: string;
   timezone: string;
   dateFormat: string;
+  startupView: 'clean-my-day' | 'home' | 'chat' | 'memory';
 }
 
 export interface AIBrainPreferences {
-  model: 'gemini-3.5-flash' | 'gemini-3.5-pro' | 'gemini-ultra-reasoning';
-  reasoningLevel: 'balanced' | 'deep' | 'instant';
+  defaultMode: 'Auto' | 'NEXORBIT AI' | 'My Connected World';
+  responseStyle: 'Concise' | 'Balanced' | 'Detailed';
   proactiveSuggestions: boolean;
-  contextWindow: number; // in tokens/items
-  customPersona: string;
   autoExtractEntities: boolean;
 }
 
 export interface PrivacyPreferences {
   zeroTraining: boolean;
-  localVectorEncryption: boolean;
+  localEncryption: boolean;
   retentionDays: number;
-  telemetryConsent: boolean;
-  autoPurgeHistory: boolean;
 }
 
 export interface NotificationPreferences {
-  dailyDigest: boolean;
-  digestTime: string;
-  calendarAlerts: boolean;
-  urgentConflicts: boolean;
-  emailNotifications: boolean;
-  weeklyInsights: boolean;
+  importantChanges: boolean;
+  meetingReminders: boolean;
+  aiUpdates: boolean;
+}
+
+export interface AppearancePreferences {
+  theme: 'light';
+  density: 'compact' | 'comfortable';
 }

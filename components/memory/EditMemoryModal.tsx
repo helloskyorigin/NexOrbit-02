@@ -17,19 +17,19 @@ export const EditMemoryModal: React.FC<EditMemoryModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const [prevMemoryId, setPrevMemoryId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<MemoryCategory>('Projects');
   const [aboutText, setAboutText] = useState('');
 
-  useEffect(() => {
-    if (memory) {
-      setTitle(memory.title);
-      setDescription(memory.description);
-      setCategory(memory.category);
-      setAboutText(memory.aboutText || memory.description);
-    }
-  }, [memory]);
+  if (memory && memory.id !== prevMemoryId) {
+    setPrevMemoryId(memory.id);
+    setTitle(memory.title);
+    setDescription(memory.description);
+    setCategory(memory.category);
+    setAboutText(memory.aboutText || memory.description);
+  }
 
   if (!isOpen || !memory) return null;
 

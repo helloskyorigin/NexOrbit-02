@@ -2,65 +2,104 @@
 
 import React from 'react';
 import { ConnectorItem } from './types';
-import { ShieldCheck, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { Badge } from '../ui/Badge';
+import { Plus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface ConnectionOverviewProps {
   connectors: ConnectorItem[];
+  onConnectNewApp?: () => void;
   className?: string;
 }
 
 export const ConnectionOverview: React.FC<ConnectionOverviewProps> = ({
   connectors,
+  onConnectNewApp,
   className,
 }) => {
-  const connectedList = connectors.filter((c) => c.status !== 'not_connected');
-  const connectedCount = connectedList.length;
-  const totalCount = connectors.length;
+  const connectedCount = connectors.filter((c) => c.status === 'connected' || c.status === 'up_to_date').length;
+  const needsAttentionCount = connectors.filter((c) => c.status === 'needs_attention' || c.status === 'error' || c.status === 'connection_failed').length;
+  const disconnectedCount = connectors.filter((c) => c.status === 'not_connected').length;
 
   return (
     <div
       className={cn(
-        'p-5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-slate-50/60 to-slate-100/50 text-slate-900 shadow-sm border border-indigo-100 relative overflow-hidden',
+        'p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-slate-50 via-indigo-50/40 to-blue-50/30 border border-slate-200/80 shadow-2xs relative overflow-hidden',
         className
       )}
     >
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="space-y-1.5 max-w-xl">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-700">
-              Brain Context Synapses
-            </span>
-            <Badge variant="indigo" size="sm" className="bg-indigo-100 text-indigo-700 border-indigo-200/50">
-              <Sparkles className="h-3 w-3 mr-1 inline" />
-              {connectedCount} of {totalCount} Connected
-            </Badge>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        <div className="flex items-center gap-5">
+          {/* Orbital Orb Graphic */}
+          <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/90 border border-slate-200/80 flex items-center justify-center shrink-0 shadow-xs">
+            <svg viewBox="0 0 48 48" className="w-12 h-12 text-blue-600">
+              <defs>
+                <linearGradient id="orbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </linearGradient>
+              </defs>
+              <circle cx="24" cy="24" r="8" fill="url(#orbGrad)" />
+              <ellipse
+                cx="24"
+                cy="24"
+                rx="18"
+                ry="8"
+                fill="none"
+                stroke="url(#orbGrad)"
+                strokeWidth="2.5"
+                transform="rotate(-25 24 24)"
+                strokeDasharray="100"
+              />
+              <ellipse
+                cx="24"
+                cy="24"
+                rx="18"
+                ry="8"
+                fill="none"
+                stroke="url(#orbGrad)"
+                strokeWidth="2.5"
+                transform="rotate(35 24 24)"
+                strokeOpacity="0.6"
+              />
+            </svg>
           </div>
-          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-950">
-            Workspace Intelligence Engine
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-            NEXORBIT dynamically indexes authorized emails, documents, and calendar events to deliver context-aware answers, daily cleanup, and goal insights.
-          </p>
+
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-sans">
+              {connectedCount} {connectedCount === 1 ? 'app' : 'apps'} connected
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-normal">
+              Your digital world is connected
+            </p>
+
+            {/* Metrics Pills Row */}
+            <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                <span>{connectedCount} Connected</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                <span>{needsAttentionCount} Needs attention</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                <span className="h-2 w-2 rounded-full bg-slate-300 shrink-0" />
+                <span>{disconnectedCount} Disconnected</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 bg-white p-3.5 rounded-xl border border-slate-100/80 shadow-3xs">
-          <div className="space-y-0.5 text-right">
-            <span className="text-[11px] text-slate-500 font-medium block">Active Health</span>
-            <span className="text-xs font-bold text-emerald-600 flex items-center justify-end gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              All Synced
-            </span>
-          </div>
-          <div className="h-8 w-px bg-slate-200" />
-          <div className="space-y-0.5">
-            <span className="text-[11px] text-slate-500 font-medium block">Privacy Standard</span>
-            <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-              Zero Training
-            </span>
-          </div>
+        {/* Action Button */}
+        <div className="shrink-0 self-start md:self-center">
+          <button
+            onClick={onConnectNewApp}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-xs transition-colors shadow-2xs cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Connect New App</span>
+          </button>
         </div>
       </div>
     </div>

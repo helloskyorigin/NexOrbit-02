@@ -1,33 +1,41 @@
 'use client';
 
 import React from 'react';
-import { Link2, ShieldCheck } from 'lucide-react';
-import { SectionHeader } from '../ui/SectionHeader';
-import { Badge } from '../ui/Badge';
+import { Bell } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface ConnectedAppsHeaderProps {
   className?: string;
+  onOpenNotifications?: () => void;
 }
 
-export const ConnectedAppsHeader: React.FC<ConnectedAppsHeaderProps> = ({ className }) => {
+export const ConnectedAppsHeader: React.FC<ConnectedAppsHeaderProps> = ({
+  className,
+  onOpenNotifications,
+}) => {
   return (
-    <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80', className)}>
-      <SectionHeader
-        title="Connected apps"
-        subtitle="Connect the tools where your important information lives."
-        badge={
-          <Badge variant="indigo" size="sm" className="bg-indigo-50 text-indigo-700 border-indigo-100">
-            <Link2 className="h-3 w-3 mr-1 text-indigo-600 inline" />
-            Workspace Context
-          </Badge>
-        }
-      />
+    <div className={cn('flex items-center justify-between gap-4 pb-2 pt-1', className)}>
+      <div className="space-y-0.5">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">
+          Connected Apps
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 font-normal">
+          Connect the tools you use so NEXORBIT can understand your world.
+        </p>
+      </div>
 
-      {/* Subtle privacy message */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shrink-0 self-start sm:self-auto">
-        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-        <span>You&apos;re always in control of what NEXORBIT can access.</span>
+      <div className="flex items-center gap-3 shrink-0">
+        <button
+          onClick={onOpenNotifications}
+          className="h-9 w-9 rounded-full bg-white border border-slate-200/80 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors shadow-2xs cursor-pointer"
+          aria-label="Notifications"
+        >
+          <Bell className="h-4 w-4" />
+        </button>
+
+        <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shadow-2xs select-none">
+          S
+        </div>
       </div>
     </div>
   );
