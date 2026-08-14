@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { WelcomeView } from './views/WelcomeView';
 import { CreateAccountView } from './views/CreateAccountView';
@@ -18,7 +18,7 @@ export interface AuthContainerProps {
 }
 
 export const AuthContainer: React.FC<AuthContainerProps> = ({ className }) => {
-  const { authView, language, setLanguage, t } = useAuth();
+  const { authView, t } = useAuth();
 
   const renderCurrentView = () => {
     switch (authView) {
@@ -45,55 +45,30 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ className }) => {
   };
 
   return (
-    <div className={cn('min-h-screen w-full bg-slate-50/60 flex flex-col justify-center items-center p-4 sm:p-6 antialiased selection:bg-indigo-100 selection:text-indigo-900', className)}>
-      {/* Top Brand Tag & Language Selector */}
-      <div className="w-full max-w-md flex justify-between items-center mb-6 px-1">
-        <div className="flex items-center gap-2 select-none">
-          <div className="h-8.5 w-8.5 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
-            N
-          </div>
-          <div>
-            <div className="font-sans font-extrabold text-sm sm:text-base tracking-tight text-slate-900 leading-none">
-              {t('brandName')}
+    <div className={cn('min-h-screen w-full bg-[#FAFAFA] flex flex-col justify-center items-center p-4 sm:p-6 antialiased selection:bg-slate-200 selection:text-black', className)}>
+      <div className="w-full max-w-[400px] flex flex-col items-center">
+        {/* Minimal Logo */}
+        <div className="mb-10 flex items-center justify-center select-none">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-black text-white flex items-center justify-center font-semibold text-xs shadow-sm">
+              N
             </div>
-            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-              {t('brandSubtitle')}
+            <div className="font-sans font-semibold text-sm tracking-tight text-black">
+              NexOrbit
             </div>
           </div>
         </div>
 
-        {/* Premium Language Toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-          <button
-            onClick={() => setLanguage('en')}
-            className={cn(
-              "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
-              language === 'en' ? "bg-white text-indigo-600 shadow-xs" : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            EN
-          </button>
-          <button
-            onClick={() => setLanguage('hi')}
-            className={cn(
-              "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
-              language === 'hi' ? "bg-white text-indigo-600 shadow-xs" : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            हिन्दी
-          </button>
+        {/* Primary Auth Form Container */}
+        <div className="w-full">
+          {renderCurrentView()}
         </div>
-      </div>
 
-      {/* Primary Auth Card */}
-      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/80 shadow-md p-6 sm:p-8 space-y-4 relative overflow-hidden transition-all duration-200">
-        {renderCurrentView()}
-      </div>
-
-      {/* Footer Security Badge */}
-      <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-400 select-none">
-        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-        <span>{t('securityReassurance')}</span>
+        {/* Footer Security Badge */}
+        <div className="mt-12 flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-400 select-none">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span>{t('securityReassurance')}</span>
+        </div>
       </div>
     </div>
   );
