@@ -7,9 +7,8 @@ export type MemorySourceType =
   | 'calendar'
   | 'notion'
   | 'drive'
-  | 'meeting'
-  | 'decision'
-  | 'note'
+  | 'github'
+  | 'meet'
   | 'slack'
   | 'manual';
 
@@ -20,6 +19,20 @@ export interface MemorySourceInfo {
   email?: string;
   url?: string;
   path?: string;
+  fileName?: string;
+}
+
+export interface KeyDetailItem {
+  label: string;
+  value: string;
+}
+
+export interface RelatedMemoryRef {
+  id: string;
+  title: string;
+  category?: MemoryCategory;
+  time?: string;
+  source?: string;
 }
 
 export interface MemoryItem {
@@ -29,15 +42,16 @@ export interface MemoryItem {
   category: MemoryCategory;
   source: MemorySourceInfo;
   tag: string;
-  timestamp: string;
-  dateGroup: 'Today' | 'Yesterday' | 'Earlier this week' | 'Older';
-  dotColor?: 'blue' | 'green' | 'purple' | 'amber' | 'emerald';
+  timestamp: string; // e.g., "May 11, 2024"
+  dateGroup?: 'Today' | 'Yesterday' | 'Earlier this week' | 'Older';
+  dotColor?: 'blue' | 'green' | 'purple' | 'amber' | 'emerald' | 'pink';
+  aboutText?: string;
+  keyDetails?: KeyDetailItem[];
+  relatedMemories?: RelatedMemoryRef[];
   relatedPerson?: string;
   relatedPersonRole?: string;
   relatedProject?: string;
-  relatedMemories?: { id: string; title: string; time: string; source: string }[];
   isPinned?: boolean;
-  strength?: number; // 1-5 confidence/recall
   createdAt?: string;
   updatedAt?: string;
 }
@@ -48,17 +62,6 @@ export interface ConnectedSourceStat {
   type: MemorySourceType;
   count: number;
   color: string;
-}
-
-export interface RecentPersonItem {
-  id: string;
-  name: string;
-  subtitle: string;
-  time: string;
-  initials: string;
-  avatarColor?: string;
-  avatarImage?: string;
-  memoryCount: number;
 }
 
 export interface CategoryStat {
