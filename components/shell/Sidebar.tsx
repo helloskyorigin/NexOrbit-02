@@ -1,17 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Home,
   MessageSquare,
   History,
   Sparkles,
-  Target,
   Box,
   LayoutGrid,
   Settings as SettingsIcon,
   HelpCircle,
   ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ConnectorId } from './ConnectorModal';
@@ -48,64 +49,107 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectPage,
   className,
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('nexorbit_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('nexorbit_sidebar_collapsed', String(next));
+      }
+      return next;
+    });
+  };
+
   return (
     <aside
       className={cn(
-        'w-[240px] bg-white rounded-3xl border border-slate-100/90 shadow-[0_8px_30px_rgba(0,0,0,0.02)] flex flex-col justify-between shrink-0 select-none p-4 my-4 ml-4 h-[calc(100vh-2rem)] sticky top-4 z-20 transition-colors duration-200',
+        'bg-white rounded-3xl border border-slate-100/90 shadow-[0_8px_30px_rgba(0,0,0,0.02)] flex flex-col justify-between shrink-0 select-none my-4 ml-4 h-[calc(100vh-2rem)] sticky top-4 z-20 transition-all duration-300 ease-in-out',
+        isCollapsed ? 'w-[72px] p-2.5' : 'w-[240px] p-4',
         className
       )}
     >
       {/* Top Header & Main Navigation */}
       <div className="space-y-6">
-        {/* Brand / Logo */}
+        {/* Brand / Logo + Collapse Toggle */}
         <div
-          onClick={() => onSelectPage('home')}
-          className="flex items-center gap-3 px-3 pt-2 cursor-pointer group"
+          className={cn(
+            'flex items-center pt-1 transition-all duration-200',
+            isCollapsed ? 'flex-col gap-3 items-center justify-center' : 'justify-between px-2'
+          )}
         >
-          {/* Orbital Ribbon Logo */}
-          <div className="relative h-8 w-8 flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 32 32" className="w-8 h-8 transform group-hover:rotate-12 transition-transform duration-300">
-              <defs>
-                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#818cf8" />
-                  <stop offset="50%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#4f46e5" />
-                </linearGradient>
-              </defs>
-              <circle cx="16" cy="16" r="3.5" fill="#6366f1" />
-              <ellipse
-                cx="16"
-                cy="16"
-                rx="12"
-                ry="5.5"
-                fill="none"
-                stroke="url(#logoGrad)"
-                strokeWidth="2.2"
-                transform="rotate(-28 16 16)"
-                strokeLinecap="round"
-              />
-              <ellipse
-                cx="16"
-                cy="16"
-                rx="12"
-                ry="5.5"
-                fill="none"
-                stroke="url(#logoGrad)"
-                strokeWidth="2.2"
-                transform="rotate(35 16 16)"
-                strokeLinecap="round"
-              />
-            </svg>
+          {/* Logo Click Handler */}
+          <div
+            onClick={() => onSelectPage('home')}
+            className="flex items-center gap-3 cursor-pointer group"
+            title={isCollapsed ? 'NEXORBIT AI BRAIN (Home)' : undefined}
+          >
+            {/* Orbital Ribbon Logo */}
+            <div className="relative h-8 w-8 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 32 32" className="w-8 h-8 transform group-hover:rotate-12 transition-transform duration-300">
+                <defs>
+                  <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#818cf8" />
+                    <stop offset="50%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#4f46e5" />
+                  </linearGradient>
+                </defs>
+                <circle cx="16" cy="16" r="3.5" fill="#6366f1" />
+                <ellipse
+                  cx="16"
+                  cy="16"
+                  rx="12"
+                  ry="5.5"
+                  fill="none"
+                  stroke="url(#logoGrad)"
+                  strokeWidth="2.2"
+                  transform="rotate(-28 16 16)"
+                  strokeLinecap="round"
+                />
+                <ellipse
+                  cx="16"
+                  cy="16"
+                  rx="12"
+                  ry="5.5"
+                  fill="none"
+                  stroke="url(#logoGrad)"
+                  strokeWidth="2.2"
+                  transform="rotate(35 16 16)"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            {!isCollapsed && (
+              <div>
+                <div className="text-[15px] font-extrabold tracking-wider text-slate-950 font-sans leading-none">
+                  NEXORBIT
+                </div>
+                <div className="text-[9px] font-bold tracking-widest text-indigo-600 uppercase mt-0.5">
+                  AI BRAIN
+                </div>
+              </div>
+            )}
           </div>
 
-          <div>
-            <div className="text-[15px] font-extrabold tracking-wider text-slate-950 font-sans leading-none">
-              NEXORBIT
-            </div>
-            <div className="text-[9px] font-bold tracking-widest text-indigo-600 uppercase mt-0.5">
-              AI BRAIN
-            </div>
-          </div>
+          {/* Subtle Desktop Collapse Control Button */}
+          <button
+            onClick={toggleCollapse}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100/80 transition-colors cursor-pointer shrink-0"
+            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="h-4 w-4 text-slate-500" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4 text-slate-400 hover:text-slate-700" />
+            )}
+          </button>
         </div>
 
         {/* Main Navigation List */}
@@ -120,8 +164,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectPage(item.id)}
+                title={isCollapsed ? item.label : undefined}
                 className={cn(
-                  'w-full flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-[13px] font-medium transition-all duration-150 text-left cursor-pointer',
+                  'w-full flex items-center transition-all duration-150 text-left cursor-pointer',
+                  isCollapsed
+                    ? 'justify-center p-2.5 rounded-2xl'
+                    : 'gap-3.5 px-4 py-2.5 rounded-2xl text-[13px] font-medium',
                   isActive
                     ? 'bg-indigo-50/80 text-indigo-600 font-semibold border border-indigo-100/80 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50/80'
@@ -130,7 +178,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className={cn('shrink-0', isActive ? 'text-indigo-600' : 'text-slate-400')}>
                   {item.icon}
                 </span>
-                <span className="truncate">{item.label}</span>
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
               </button>
             );
           })}
@@ -138,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Section: Settings, Support & Profile Switcher */}
-      <div className="space-y-2 pt-4 border-t border-slate-100">
+      <div className="space-y-2 pt-3 border-t border-slate-100">
         <div className="space-y-1">
           {BOTTOM_NAV_ITEMS.map((item) => {
             const isActive = activePage === item.id;
@@ -146,8 +194,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onSelectPage(item.id)}
+                title={isCollapsed ? item.label : undefined}
                 className={cn(
-                  'w-full flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-[13px] font-medium transition-all duration-150 text-left cursor-pointer',
+                  'w-full flex items-center transition-all duration-150 text-left cursor-pointer',
+                  isCollapsed
+                    ? 'justify-center p-2.5 rounded-2xl'
+                    : 'gap-3.5 px-4 py-2.5 rounded-2xl text-[13px] font-medium',
                   isActive
                     ? 'bg-indigo-50/80 text-indigo-600 font-semibold border border-indigo-100/80 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50/80'
@@ -156,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className={cn('shrink-0', isActive ? 'text-indigo-600' : 'text-slate-400')}>
                   {item.icon}
                 </span>
-                <span className="truncate">{item.label}</span>
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
               </button>
             );
           })}
@@ -166,25 +218,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="pt-2 border-t border-slate-100/80">
           <div
             onClick={() => onSelectPage('settings')}
-            className="flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
+            title={isCollapsed ? 'Satyam (Free Plan)' : undefined}
+            className={cn(
+              'flex items-center rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group',
+              isCollapsed ? 'justify-center p-1.5' : 'justify-between p-2'
+            )}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
                 S
               </div>
-              <div className="min-w-0 text-left">
-                <div className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
-                  Satyam
+              {!isCollapsed && (
+                <div className="min-w-0 text-left">
+                  <div className="text-xs font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                    Satyam
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-normal truncate">
+                    Free Plan
+                  </div>
                 </div>
-                <div className="text-[10px] text-slate-500 font-normal truncate">
-                  Free Plan
-                </div>
-              </div>
+              )}
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+            {!isCollapsed && (
+              <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+            )}
           </div>
         </div>
       </div>
     </aside>
   );
 };
+

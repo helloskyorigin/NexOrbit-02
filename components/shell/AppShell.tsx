@@ -129,10 +129,10 @@ export const AppShell: React.FC<AppShellProps> = ({
           {/* Main Content Area Container */}
           <main
             className={cn(
-              'flex-1 w-full mx-auto px-3 sm:px-6 py-2 sm:py-4',
+              'flex-1 w-full mx-auto px-4 sm:px-6 md:px-8 py-3 sm:py-5 overflow-x-hidden',
               hasCustomHeader && 'safe-pt',
               activePage === 'home'
-                ? 'max-w-5xl'
+                ? 'max-w-7xl'
                 : activePage === 'chat' || activePage === 'ask' || activePage === 'ask-my-world'
                 ? 'max-w-7xl'
                 : activePage === 'settings'

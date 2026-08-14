@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ArrowRight,
   ChevronRight,
@@ -11,20 +11,30 @@ import {
   Bell,
   Sparkles,
   CheckCircle2,
-  X,
-  Brain,
   Menu,
   Mic,
+  MicOff,
   Paperclip,
+  Plus,
+  Image as ImageIcon,
+  X,
   Globe,
+  Bot,
   AlertCircle,
   Clock,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ConnectorId } from '../shell/ConnectorModal';
 import { useToast } from '../ui/Toast';
-import { ModeSelector } from '../chat/ModeSelector';
 import { AIMode } from '../chat/types';
+
+export interface AttachmentItem {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  previewUrl?: string;
+}
 
 export interface HomeDashboardProps {
   onNavigate: (pageId: string) => void;
@@ -43,18 +53,201 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const [commandText, setCommandText] = useState('');
   const [currentMode, setCurrentMode] = useState<AIMode>('auto');
 
+  // Multimodal Attachment State
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+  const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Close attach menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
+        setIsAttachMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+    const newAttachments: AttachmentItem[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        addToast({
+          type: 'warning',
+          title: 'File Too Large',
+          description: `"${file.name}" exceeds the 15 MB limit.`,
+        });
+        return;
+      }
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const previewUrl = event.target?.result as string;
+          setAttachments((prev) => [
+            ...prev,
+            {
+              id: Math.random().toString(36).substring(2, 9),
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              previewUrl,
+            },
+          ]);
+        };
+        reader.onerror = () => {
+          addToast({
+            type: 'error',
+            title: 'File Read Error',
+            description: `Could not process image "${file.name}".`,
+          });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        newAttachments.push({
+          id: Math.random().toString(36).substring(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        });
+      }
+    });
+
+    if (newAttachments.length > 0) {
+      setAttachments((prev) => [...prev, ...newAttachments]);
+    }
+
+    // Reset input so re-selecting the same file fires onChange
+    e.target.value = '';
+    setIsAttachMenuOpen(false);
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const toggleVoiceInput = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      addToast({
+        type: 'warning',
+        title: 'Voice Input Unsupported',
+        description: 'Your browser does not support voice input. Try Chrome or Edge.',
+      });
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        addToast({
+          type: 'info',
+          title: 'Voice Input Active',
+          description: 'Listening... Speak now to populate your command.',
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+
+        setCommandText(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        setIsListening(false);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          addToast({
+            type: 'error',
+            title: 'Microphone Access Denied',
+            description: 'Please allow microphone access in your browser settings to use voice input.',
+          });
+        } else if (event.error !== 'no-speech') {
+          addToast({
+            type: 'warning',
+            title: 'Voice Input Issue',
+            description: `Voice input encountered an issue (${event.error}). Please try again.`,
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      setIsListening(false);
+      addToast({
+        type: 'error',
+        title: 'Voice Input Error',
+        description: 'Failed to access microphone. Please check browser permissions.',
+      });
+    }
+  };
+
   const handleCommandSubmit = (e?: React.FormEvent, customQuery?: string, customMode?: AIMode) => {
     if (e) e.preventDefault();
     const queryToSend = customQuery !== undefined ? customQuery : commandText;
     const modeToSend = customMode || currentMode;
 
-    if (!queryToSend.trim()) return;
+    if (!queryToSend.trim() && attachments.length === 0) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
 
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('pending_ask_command', queryToSend.trim());
+      sessionStorage.setItem('pending_ask_command', queryToSend.trim() || 'Multimodal context query');
       sessionStorage.setItem('pending_chat_mode', modeToSend);
+      if (attachments.length > 0) {
+        sessionStorage.setItem(
+          'pending_chat_attachments',
+          JSON.stringify(attachments.map((a) => ({ name: a.name, type: a.type })))
+        );
+      }
     }
-    
+
+    setCommandText('');
+    setAttachments([]);
+    setIsAttachMenuOpen(false);
+
     if (onNavigate) {
       onNavigate('chat');
     }
@@ -69,7 +262,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   };
 
   return (
-    <div className="relative min-h-full w-full flex flex-col justify-between overflow-hidden pb-8 select-none">
+    <div className="relative min-h-full w-full flex flex-col justify-between overflow-x-hidden pb-8 select-none">
       {/* 1. COSMIC AMBIENT ORBITAL BACKGROUND (SVG + CSS) */}
       <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
         {/* Soft Radial Center Glow */}
@@ -191,14 +384,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <Menu className="h-5 w-5" />
               </button>
             )}
-            <h1 className="text-[26px] sm:text-3xl font-bold tracking-tight text-slate-950 flex items-center gap-1.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-950 flex items-center gap-2">
               <span>Good morning, {userName}</span>
               <span className="text-indigo-600 font-normal inline-block text-xl sm:text-2xl animate-pulse">
                 ✦
               </span>
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 font-normal">
+          <p className="text-xs sm:text-sm text-slate-500 font-medium">
             NEXORBIT is ready.
           </p>
         </div>
@@ -208,7 +401,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           {/* Notifications Bell */}
           <button
             onClick={handleNotificationClick}
-            className="h-9 w-9 rounded-full bg-white/95 backdrop-blur-sm border border-slate-200/70 text-slate-600 hover:text-slate-950 hover:bg-slate-50 flex items-center justify-center shadow-2xs transition-colors relative cursor-pointer"
+            className="h-9 w-9 rounded-full bg-white/95 backdrop-blur-sm border border-slate-200/80 text-slate-600 hover:text-slate-950 hover:bg-slate-50 flex items-center justify-center shadow-2xs transition-colors relative cursor-pointer"
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
@@ -226,95 +419,229 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
       </div>
 
-      {/* 3. HERO COMMAND SURFACE (SIGNATURE ANIMATED BORDER) */}
-      <div className="w-full max-w-2xl mx-auto mt-6 mb-4 sm:my-8 px-1">
+      {/* 3. HERO COMMAND SURFACE (SIGNATURE HIGH-END AI COMMAND CENTER) */}
+      <div className="w-full max-w-3xl mx-auto my-6 sm:my-8 px-1">
         <form onSubmit={handleCommandSubmit} className="relative group flex flex-col">
           {/* Glowing Animated Gradient Perimeter */}
           <div className="absolute -inset-[1.5px] rounded-[1.75rem] bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-300 sm:from-indigo-500 sm:via-purple-500 sm:to-indigo-500 opacity-50 sm:opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 blur-[2px] transition-all duration-500 animate-gradient-x" />
 
-          {/* Command Pill Surface */}
-          <div className="relative flex flex-col rounded-[1.75rem] bg-white/95 backdrop-blur-md p-3 sm:p-4 shadow-[0_8px_30px_rgba(99,102,241,0.08)] border border-indigo-100/90 gap-3">
+          {/* Hidden File Inputs */}
+          <input
+            type="file"
+            ref={imageInputRef}
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".pdf,.doc,.docx,.txt,.csv,.json,.xlsx,.pptx,.md,text/*,application/pdf"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {/* Command Surface Card */}
+          <div className="relative flex flex-col rounded-[1.75rem] bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-[0_8px_32px_rgba(99,102,241,0.06)] border border-indigo-100/90 gap-3">
+            {/* Attached Chips Section */}
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 px-1 pt-0.5">
+                {attachments.map((file) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl bg-slate-100/90 border border-slate-200/80 text-xs font-medium text-slate-800"
+                  >
+                    {file.previewUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={file.previewUrl}
+                        alt={file.name}
+                        className="h-6 w-6 rounded-md object-cover shrink-0 border border-slate-200"
+                      />
+                    ) : (
+                      <div className="h-6 w-6 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                        <FileText className="h-3.5 w-3.5" />
+                      </div>
+                    )}
+                    <span className="max-w-[140px] truncate font-bold text-slate-900">{file.name}</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{formatFileSize(file.size)}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(file.id)}
+                      className="p-1 rounded-md hover:bg-slate-200 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      title="Remove file"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <input
               type="text"
               value={commandText}
               onChange={(e) => setCommandText(e.target.value)}
-              placeholder="What can NEXORBIT help you with?"
-              className="w-full bg-transparent text-slate-900 placeholder:text-slate-400 text-[14.5px] sm:text-base focus:outline-none px-2 pt-1 font-normal"
+              placeholder={isListening ? 'Listening... Speak now' : 'What can NEXORBIT help you with?'}
+              className={cn(
+                'w-full bg-transparent text-slate-900 placeholder:text-slate-400 text-base sm:text-[17px] focus:outline-none px-2 font-medium',
+                isListening && 'placeholder:text-indigo-600 placeholder:font-semibold'
+              )}
             />
             
-            <div className="flex items-center justify-between px-1 gap-2">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                {/* Mode Selector */}
-                <ModeSelector
-                  currentMode={currentMode}
-                  onChangeMode={setCurrentMode}
-                  variant="compact"
-                />
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 pt-3 border-t border-slate-100/90">
+              {/* Mode Selector - Un-cramped spacious design */}
+              <div
+                className="bg-slate-100/80 p-1 rounded-2xl flex items-center gap-1 select-none overflow-x-auto max-w-full"
+                role="radiogroup"
+                aria-label="AI Mode Selection"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={currentMode === 'auto'}
+                  onClick={() => setCurrentMode('auto')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 whitespace-nowrap cursor-pointer',
+                    currentMode === 'auto'
+                      ? 'bg-white text-indigo-700 shadow-2xs border border-indigo-100/80'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/50'
+                  )}
+                >
+                  <Sparkles className={cn('h-3.5 w-3.5', currentMode === 'auto' ? 'text-indigo-600' : 'text-slate-400')} />
+                  <span>Auto</span>
+                </button>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    handleCommandSubmit(undefined, commandText || 'Upload files for context');
-                  }}
-                  className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                  title="Attach file"
+                  role="radio"
+                  aria-checked={currentMode === 'general'}
+                  onClick={() => setCurrentMode('general')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 whitespace-nowrap cursor-pointer',
+                    currentMode === 'general'
+                      ? 'bg-white text-indigo-950 shadow-2xs border border-indigo-100/80'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/50'
+                  )}
                 >
-                  <Paperclip className="h-4 w-4" />
+                  <Bot className={cn('h-3.5 w-3.5', currentMode === 'general' ? 'text-indigo-600' : 'text-slate-400')} />
+                  <span>NEXORBIT AI</span>
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    handleCommandSubmit(undefined, commandText || 'Voice input briefing');
-                  }}
-                  className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                  title="Voice command"
+                  role="radio"
+                  aria-checked={currentMode === 'connected'}
+                  onClick={() => setCurrentMode('connected')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 whitespace-nowrap cursor-pointer',
+                    currentMode === 'connected'
+                      ? 'bg-white text-indigo-950 shadow-2xs border border-indigo-100/80'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/50'
+                  )}
                 >
-                  <Mic className="h-4 w-4" />
+                  <Globe className={cn('h-3.5 w-3.5', currentMode === 'connected' ? 'text-indigo-600' : 'text-slate-400')} />
+                  <span>My Connected World</span>
                 </button>
               </div>
 
-              {/* Circular Send Action Button */}
-              <button
-                type="submit"
-                className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-md active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-50"
-                aria-label="Send command"
-              >
-                <ArrowRight className="h-5 w-5" />
-              </button>
+              {/* Action Buttons: Attach (+), Voice (Mic), Send */}
+              <div className="flex items-center gap-2 shrink-0 ml-auto relative">
+                {/* Attach (+) Button & Dropdown Menu */}
+                <div className="relative" ref={attachMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAttachMenuOpen((prev) => !prev)}
+                    className={cn(
+                      'p-2 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/80 transition-colors cursor-pointer flex items-center gap-1 font-semibold text-xs',
+                      isAttachMenuOpen && 'bg-indigo-50 text-indigo-600'
+                    )}
+                    title="Attach files or photos"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+
+                  {/* Popover Options */}
+                  {isAttachMenuOpen && (
+                    <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-2xl p-1.5 shadow-xl border border-slate-100 z-30 space-y-0.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/70 font-semibold transition-colors cursor-pointer text-left"
+                      >
+                        <ImageIcon className="h-4 w-4 text-indigo-600 shrink-0" />
+                        <span>Photo / Image</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/70 font-semibold transition-colors cursor-pointer text-left"
+                      >
+                        <FileText className="h-4 w-4 text-indigo-600 shrink-0" />
+                        <span>File / Document</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Voice Input Button */}
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  className={cn(
+                    'p-2 rounded-xl transition-all cursor-pointer relative',
+                    isListening
+                      ? 'bg-rose-50 text-rose-600 ring-2 ring-rose-400 ring-offset-1 animate-pulse'
+                      : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/80'
+                  )}
+                  title={isListening ? 'Stop recording' : 'Voice input'}
+                >
+                  {isListening ? <MicOff className="h-4 w-4 text-rose-600" /> : <Mic className="h-4 w-4" />}
+                </button>
+
+                {/* Circular Send Action Button */}
+                <button
+                  type="submit"
+                  disabled={!commandText.trim() && attachments.length === 0}
+                  className="h-10 w-10 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-md active:scale-95 transition-all shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Send command"
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </form>
 
-        {/* QUICK SUGGESTIONS */}
-        <div className="relative -mx-4 sm:mx-0">
-          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 block sm:hidden" />
-          <div className="flex overflow-x-auto scrollbar-hide pb-2 pt-3 px-5 sm:px-1 gap-2 snap-x snap-mandatory">
-            {[
-              { text: 'What changed since yesterday?', mode: 'auto' as AIMode },
-              { text: 'Do I have any deadline conflicts?', mode: 'connected' as AIMode },
-              { text: 'What should I focus on today?', mode: 'auto' as AIMode },
-            ].map((s, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleCommandSubmit(undefined, s.text, s.mode)}
-                className="snap-start shrink-0 bg-white/80 hover:bg-white border border-slate-200/80 hover:border-indigo-200 text-slate-700 hover:text-indigo-900 text-[12.5px] px-3.5 py-2 rounded-xl shadow-3xs hover:shadow-xs transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
-              >
-                <Sparkles className="h-3 w-3 text-indigo-500" />
-                <span>{s.text}</span>
-              </button>
-            ))}
-          </div>
+        {/* QUICK PROMPTS (3 CLEAN RESPONSIVE PROMPT CHIPS - ZERO OVERFLOW) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full mt-3.5">
+          {[
+            { text: 'What changed since yesterday?', mode: 'auto' as AIMode },
+            { text: 'Do I have any deadline conflicts?', mode: 'connected' as AIMode },
+            { text: 'What should I focus on today?', mode: 'auto' as AIMode },
+          ].map((prompt, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => handleCommandSubmit(undefined, prompt.text, prompt.mode)}
+              className="p-3 rounded-2xl bg-white/90 hover:bg-white border border-slate-200/80 hover:border-indigo-200 text-slate-700 hover:text-indigo-950 text-xs sm:text-[12.5px] font-semibold shadow-2xs hover:shadow-xs transition-all cursor-pointer flex items-center gap-2.5 text-left w-full group min-w-0"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-indigo-500 shrink-0 group-hover:scale-110 transition-transform" />
+              <span className="truncate">{prompt.text}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* COMPACT STATUS STRIP (4 BLOCKS) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 my-6 px-1">
+      {/* 4. STATUS SUMMARY (4 CONSISTENT COMPACT METRIC CARDS) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 my-6 sm:my-8 px-1">
         {[
-          { label: 'Need attention', count: 2, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-          { label: 'Changed', count: 3, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-          { label: 'Upcoming', count: 2, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
-          { label: 'Completed', count: 6, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' }
+          { label: 'Need attention', count: 2, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100/80' },
+          { label: 'Changed', count: 3, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100/80' },
+          { label: 'Upcoming', count: 2, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100/80' },
+          { label: 'Completed', count: 6, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100/80' }
         ].map((stat, i) => (
           <div
             key={i}
@@ -324,30 +651,30 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               else if (stat.label === 'Upcoming') onOpenConnector('calendar');
               else addToast({ type: 'success', title: 'Completed Tasks', description: '6 tasks successfully finished.' });
             }}
-            className={`flex items-center justify-between p-4 rounded-3xl border ${stat.border} bg-white shadow-3xs hover:shadow-md transition-all cursor-pointer group`}
+            className={cn(
+              'flex items-center justify-between p-4 rounded-3xl border bg-white shadow-2xs hover:shadow-sm transition-all cursor-pointer group',
+              stat.border
+            )}
           >
-            <div className="flex items-center gap-3.5">
-              <div className={`h-10 w-10 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center shrink-0`}>
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className={cn('h-10 w-10 rounded-2xl flex items-center justify-center shrink-0', stat.bg, stat.color)}>
                 <stat.icon className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-xl font-extrabold text-slate-950 leading-none">{stat.count}</div>
-                <div className="text-xs font-medium text-slate-500 mt-1">{stat.label}</div>
+              <div className="min-w-0">
+                <div className="text-2xl font-extrabold text-slate-950 font-mono leading-none">{stat.count}</div>
+                <div className="text-xs font-semibold text-slate-500 mt-1 truncate">{stat.label}</div>
               </div>
             </div>
-            <div className="text-xs font-semibold text-slate-400 group-hover:text-indigo-600 transition-colors flex items-center gap-0.5">
-              <span>View details</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
           </div>
         ))}
       </div>
 
-      {/* 5. MAIN CONTENT REGION */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-2 sm:mt-4 px-1">
+      {/* 5. MAIN CONTENT REGION (TODAY'S FOCUS + WHAT CHANGED & CLEAN MY DAY) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 px-1">
         
-        {/* TODAY'S FOCUS */}
-        <div className="lg:col-span-8 bg-white rounded-3xl p-5 sm:p-6 border border-slate-100/90 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:border-indigo-100 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4">
+        {/* TODAY'S FOCUS (lg:col-span-8) */}
+        <div className="lg:col-span-8 bg-white rounded-3xl p-5 sm:p-6 border border-slate-100/90 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:border-indigo-100 hover:shadow-sm transition-all duration-200 flex flex-col justify-between space-y-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -401,86 +728,84 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </div>
         </div>
         
-        {/* RIGHT COLUMN WRAPPER */}
+        {/* RIGHT COLUMN (lg:col-span-4): WHAT CHANGED + CLEAN MY DAY */}
         <div className="lg:col-span-4 flex flex-col gap-5">
-          {/* CARD 1: WHAT CHANGED */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-100/90 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:border-indigo-100 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4">
-          <div className="space-y-3.5">
-            {/* Card Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-[15px] text-slate-950 tracking-tight">
-                  What Changed
-                </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Important updates since your last visit.
-                </p>
+          {/* WHAT CHANGED */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-100/90 shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:border-indigo-100 hover:shadow-sm transition-all duration-200 flex flex-col justify-between space-y-4">
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-[15px] text-slate-950 tracking-tight">
+                    What Changed
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Recent updates since your last visit.
+                  </p>
+                </div>
+                <button
+                  onClick={() => onNavigate('what-changed')}
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <span>View all</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
               </div>
+
+              <div className="space-y-2.5">
+                {[
+                  { title: 'Project Alpha deadline changed', time: '2h ago', icon: Calendar, desc: 'Dec 12 → Dec 15' },
+                  { title: 'Rahul replied', time: '4h ago', icon: Mail, desc: 'Re: Project Alpha · "Thanks for the update..."' },
+                  { title: 'Proposal v2 updated', time: '6h ago', icon: FileText, desc: 'In Project Alpha' },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    onClick={() => onNavigate('what-changed')}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                        <item.icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 truncate">{item.title}</div>
+                        <div className="text-[11px] text-slate-500 truncate">{item.desc}</div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-slate-400 shrink-0 font-medium">{item.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* CLEAN MY DAY CARD */}
+          <div className="relative bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/30 rounded-3xl p-5 border border-indigo-100/60 shadow-[0_4px_24px_rgba(99,102,241,0.04)] hover:shadow-sm transition-all duration-200 flex flex-col justify-between space-y-4 overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 blur-2xl rounded-full -mr-10 -mt-10" />
+            
+            <div className="space-y-1 relative z-10">
+              <h3 className="font-bold text-[17px] text-slate-950 tracking-tight">
+                Need a clearer day?
+              </h3>
+              <p className="text-xs text-slate-500 font-normal">
+                Let NEXORBIT decide what matters.
+              </p>
+            </div>
+
+            <div className="relative z-10">
               <button
-                onClick={() => onNavigate('what-changed')}
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer"
+                onClick={() => onNavigate('clean-my-day')}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[13px] py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-md shadow-indigo-600/20 active:scale-[0.98]"
               >
-                <span>View all</span>
-                <ChevronRight className="h-3.5 w-3.5" />
+                <span>Clean My Day</span>
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
-
-            {/* Items List */}
-            <div className="space-y-2.5">
-              {[
-                { title: 'Project Alpha deadline changed', time: '2h ago', icon: Calendar, desc: 'Dec 12 → Dec 15' },
-                { title: 'Rahul replied', time: '4h ago', icon: Mail, desc: 'Re: Project Alpha · "Thanks for the update..."' },
-                { title: 'Proposal v2 updated', time: '6h ago', icon: FileText, desc: 'In Project Alpha' },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  onClick={() => onNavigate('what-changed')}
-                  className="flex items-center justify-between gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
-                      <item.icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold text-slate-900 truncate">{item.title}</div>
-                      <div className="text-[11px] text-slate-500 truncate">{item.desc}</div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] text-slate-400 shrink-0 font-medium">{item.time}</span>
-                </div>
-              ))}
-            </div>
           </div>
-        </div>
-
-        {/* CARD 2: CLEAN MY DAY */}
-        <div className="relative bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/30 rounded-3xl p-5 border border-indigo-100/60 shadow-[0_4px_24px_rgba(99,102,241,0.04)] hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 blur-2xl rounded-full -mr-10 -mt-10" />
-          
-          <div className="space-y-1 relative z-10">
-            <h3 className="font-bold text-[17px] text-slate-950 tracking-tight">
-              Need a clearer day?
-            </h3>
-            <p className="text-xs text-slate-500 font-normal">
-              Let NEXORBIT decide what matters.
-            </p>
-          </div>
-
-          <div className="relative z-10">
-            <button
-              onClick={() => onNavigate('clean-my-day')}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[13px] py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer shadow-md shadow-indigo-600/20 active:scale-[0.98]"
-            >
-              <span>Clean My Day</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
         </div>
       </div>
 
       {/* 6. UPCOMING SECTION */}
-      <div className="mt-6 bg-white rounded-3xl p-5 sm:p-6 border border-slate-100/90 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+      <div className="mt-6 sm:mt-8 bg-white rounded-3xl p-5 sm:p-6 border border-slate-100/90 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-bold text-[17px] text-slate-950 tracking-tight">
@@ -499,7 +824,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {[
             { time: '10:00 AM', title: 'Project Alpha Sync', source: 'Google Meet', icon: Calendar, color: 'text-indigo-600' },
             { time: '1:30 PM', title: 'Client Call', source: 'Zoom Meeting', icon: Video, color: 'text-purple-600' },
@@ -549,3 +874,4 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     </div>
   );
 };
+
