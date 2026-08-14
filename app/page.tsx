@@ -135,7 +135,7 @@ export default function NexorbitApp() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">NEXORBIT Architectural &amp; Design Token Hub</h2>
+              <h2 className="text-lg font-bold text-slate-900">NexOrbit Architectural &amp; Design Token Hub</h2>
               <p className="text-xs text-slate-500">Design System Tokens &amp; Phase 0 Backend Verification Suite</p>
             </div>
             <Tabs
@@ -156,7 +156,7 @@ export default function NexorbitApp() {
                   <div className="flex items-center gap-2">
                     <Palette className="h-4 w-4 text-indigo-600" />
                     <span className="text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                      NEXORBIT Visual System Specification
+                      NexOrbit Visual System Specification
                     </span>
                   </div>
                   <h2 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -303,7 +303,7 @@ export default function NexorbitApp() {
               >
                 <div className="space-y-3 text-xs text-slate-600">
                   <p>
-                    NEXORBIT synthesizes context across Gmail, Google Calendar, Google Drive, Notion, and GitHub.
+                    NexOrbit synthesizes context across Gmail, Google Calendar, Google Drive, Notion, and GitHub.
                   </p>
                   <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 text-xs">
                     <span className="font-semibold text-slate-900 block">Workspace Mapping</span>
@@ -340,7 +340,7 @@ export default function NexorbitApp() {
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Application</span>
-                      <span className="text-slate-900 font-semibold">NEXORBIT</span>
+                      <span className="text-slate-900 font-semibold">NexOrbit</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-100">
                       <span className="text-slate-500">Free Credit Allowance</span>
