@@ -152,8 +152,8 @@ export const TaskActionModal: React.FC<TaskActionModalProps> = ({
               <h3 className="text-sm sm:text-base font-semibold text-slate-900 truncate max-w-[260px]">
                 {item.title}
               </h3>
-              <p className="text-xs text-slate-600">
-                {item.time} ({item.duration})
+              <p className="text-xs text-slate-500">
+                {item.time} {item.subtitle ? `• ${item.subtitle}` : ''}
               </p>
             </div>
           </div>

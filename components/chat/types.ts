@@ -12,19 +12,19 @@ export const AI_MODES: AIModeOption[] = [
     id: 'auto',
     label: 'Auto',
     shortLabel: 'Auto',
-    description: 'NexOrbit decides whether connected-app context is needed',
+    description: 'NEXORBIT intelligently routes reasoning or connected data',
   },
   {
     id: 'general',
-    label: 'NexOrbit AI',
+    label: 'NEXORBIT AI',
     shortLabel: 'General AI',
-    description: 'General AI conversation without connector search',
+    description: 'Normal conversational AI without connector search',
   },
   {
     id: 'connected',
     label: 'My Connected World',
-    shortLabel: 'Connected World',
-    description: 'Explicitly search connected apps, workspace files, and memory',
+    shortLabel: 'Use my data & apps',
+    description: 'Prioritize information from connected apps & files',
   },
 ];
 
@@ -35,17 +35,28 @@ export interface SourceReference {
   connector: ConnectorType;
   connectorName: string;
   title: string;
-  snippet: string;
-  timestamp: string;
+  snippet?: string;
+  timestamp?: string;
   sender?: string;
   url?: string;
+  iconType?: 'drive' | 'gmail' | 'notion' | 'calendar' | 'github' | 'slack';
+}
+
+export interface DocumentCardData {
+  title: string;
+  source: string;
+  updatedAt: string;
+  fileType: 'pdf' | 'doc' | 'sheet';
+  url?: string;
+  size?: string;
 }
 
 export interface ChatAction {
   id: string;
   label: string;
-  actionType: 'draft_reply' | 'review_conflict' | 'view_meeting' | 'open_source' | 'copy_text' | 'custom';
+  actionType: 'draft_reply' | 'review_conflict' | 'view_meeting' | 'open_source' | 'copy_text' | 'share' | 'add_to_notion' | 'create_task' | 'custom';
   payload?: any;
+  icon?: string;
 }
 
 export interface FindingItem {
@@ -59,15 +70,25 @@ export interface FindingItem {
   actionType: 'review_conflict' | 'open_conversation' | 'view_meeting' | 'general';
 }
 
+export interface MemoryContextData {
+  id: string;
+  text: string;
+  actionText: string;
+  relatedCount?: number;
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
   text: string;
   timestamp: string;
   modeUsed?: AIMode;
+  document?: DocumentCardData;
+  highlights?: string[];
   sourcesUsed?: SourceReference[];
   findings?: FindingItem[];
   actions?: ChatAction[];
+  memoryContext?: MemoryContextData;
   isThinking?: boolean;
 }
 
@@ -78,4 +99,7 @@ export interface ChatConversation {
   previewText?: string;
   mode: AIMode;
   messages: ChatMessage[];
+  sources?: SourceReference[];
+  actions?: ChatAction[];
+  memory?: MemoryContextData;
 }

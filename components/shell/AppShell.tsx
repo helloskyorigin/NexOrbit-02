@@ -132,7 +132,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               activePage === 'home'
                 ? 'max-w-5xl'
                 : activePage === 'chat' || activePage === 'ask' || activePage === 'ask-my-world'
-                ? 'max-w-4xl'
+                ? 'max-w-7xl'
                 : activePage === 'settings'
                 ? 'max-w-7xl'
                 : activePage === 'what-changed' || activePage === 'clean-my-day' || activePage === 'memory'

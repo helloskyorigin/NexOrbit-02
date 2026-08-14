@@ -44,22 +44,26 @@ export interface ChangeFeedItem {
   contextSubtitle: string;
   sourceId: ConnectorSourceId;
   sourceName: string;
-  timeSection: 'Earlier Today' | 'Yesterday' | 'Earlier';
+  timeSection: 'Today' | 'Yesterday' | 'Earlier' | 'Earlier Today';
   timestamp: string;
   importance: ChangeImportance; // important = amber/red, relevant = blue/indigo, informational = neutral/green
   category: CategoryFilter;
   isRead: boolean;
   
-  // Visual indicators
+  // Visual indicators & badges
   iconType: 'mail' | 'calendar' | 'doc' | 'task' | 'mention' | 'code';
+  priorityBadge?: string; // e.g., "High Priority"
   personName?: string;
   personAvatar?: string;
   additionalPersonCount?: number;
   badgeDotColor?: 'purple' | 'blue' | 'emerald' | 'amber';
 
-  // AI Interpretation Breakdown
+  // AI Interpretation Breakdown & State Transition
   whatChanged: string;
   whyItMatters: string;
+  previousValue?: string;
+  newValue?: string;
+  timeFilterGroup?: 'Today' | 'Yesterday' | 'This Week' | 'This Month';
   relatedContext: RelatedSourceContext[];
   recommendedAction?: {
     label: string;

@@ -1,23 +1,43 @@
-import { AIMode, ChatMessage, SourceReference, FindingItem, ChatAction } from './types';
+import { AIMode, ChatMessage, SourceReference, FindingItem, ChatAction, DocumentCardData, MemoryContextData } from './types';
 
 export const MOCK_CHAT_SOURCES: Record<string, SourceReference> = {
+  driveProposal: {
+    id: 'src-drive-1',
+    connector: 'drive',
+    connectorName: 'Google Drive',
+    title: 'proposal_v2.3.pdf',
+    snippet: 'Proposal v2.3 includes revised timeline Aug 2024 - Feb 2025, +12% budget breakdown, client feedback.',
+    timestamp: 'Updated May 11, 2024',
+    iconType: 'drive',
+  },
   gmailAlpha: {
     id: 'src-gmail-1',
     connector: 'gmail',
     connectorName: 'Gmail',
-    title: 'Project Alpha spec review & timeline',
-    snippet: 'Rahul Mehta: "We are aiming for Friday COB to submit the final spec review before release."',
+    title: 'Re: Project Alpha Proposal',
+    snippet: 'Rahul Mehta: "We reviewed the proposal and have 3 additional feature requests for v2.3."',
     timestamp: 'Today, 9:15 AM',
     sender: 'Rahul Mehta <rahul@alpha-client.com>',
+    iconType: 'gmail',
+  },
+  notionRoadmap: {
+    id: 'src-notion-1',
+    connector: 'notion',
+    connectorName: 'Notion',
+    title: 'Project Alpha Hub',
+    snippet: 'Notion Hub tracking milestones, specs, deliverables, and review meeting on May 15.',
+    timestamp: 'Yesterday, 5:30 PM',
+    iconType: 'notion',
   },
   calendarSync: {
     id: 'src-cal-1',
     connector: 'calendar',
     connectorName: 'Calendar',
-    title: 'Project Alpha Sync',
-    snippet: 'Event scheduled for Tomorrow 10:00 AM with Rahul Mehta, Aryan, and Dev Leads in Room 4.',
-    timestamp: 'Tomorrow, 10:00 AM',
-    sender: 'Google Calendar (Sync Room)',
+    title: 'Project Alpha Review Meeting',
+    snippet: 'Event scheduled for May 15, 10:00 AM with Client stakeholders & Dev Leads.',
+    timestamp: 'May 15, 10:00 AM',
+    sender: 'Google Calendar',
+    iconType: 'calendar',
   },
   calendarClientCall: {
     id: 'src-cal-2',
@@ -27,23 +47,7 @@ export const MOCK_CHAT_SOURCES: Record<string, SourceReference> = {
     snippet: 'Event scheduled for Tomorrow 1:30 PM with Rahul Mehta and Product Operations.',
     timestamp: 'Tomorrow, 1:30 PM',
     sender: 'Google Calendar',
-  },
-  driveProposal: {
-    id: 'src-drive-1',
-    connector: 'drive',
-    connectorName: 'Google Drive',
-    title: 'Project_Alpha_Master_Brief_v2.pdf',
-    snippet: 'Section 4.1 Target Timeline explicitly notes Monday August 18 as the core delivery sign-off date.',
-    timestamp: 'Updated Aug 11',
-    sender: 'Shared with Aryan / Product Strategy',
-  },
-  notionRoadmap: {
-    id: 'src-notion-1',
-    connector: 'notion',
-    connectorName: 'Notion',
-    title: 'Alpha Engineering Roadmap & Sprint 14',
-    snippet: 'Sprint 14 tracking: 8 tasks completed, 2 in code review, deadline aligned with v2 brief.',
-    timestamp: 'Yesterday, 5:30 PM',
+    iconType: 'calendar',
   },
   githubPr: {
     id: 'src-github-1',
@@ -52,60 +56,82 @@ export const MOCK_CHAT_SOURCES: Record<string, SourceReference> = {
     title: 'PR #142: Core API Alignment & Telemetry',
     snippet: 'Merged by Aryan into main. CI/CD automated tests passing 100%.',
     timestamp: 'Aug 12, 2:10 PM',
+    iconType: 'github',
   },
+};
+
+export const MOCK_CHAT_ACTIONS: ChatAction[] = [
+  { id: 'act-drive', label: 'Open in Drive', actionType: 'open_source', icon: 'drive' },
+  { id: 'act-share', label: 'Share', actionType: 'share', icon: 'share' },
+  { id: 'act-notion', label: 'Add to Notion', actionType: 'add_to_notion', icon: 'notion' },
+  { id: 'act-task', label: 'Create follow-up task', actionType: 'create_task', icon: 'task' },
+];
+
+export const MOCK_MEMORY_DATA: MemoryContextData = {
+  id: 'mem-1',
+  text: 'You asked about Project Alpha proposal 3 times this week.',
+  actionText: 'View related memories',
+  relatedCount: 3,
 };
 
 export function generateAIResponse(query: string, mode: AIMode): {
   text: string;
+  document?: DocumentCardData;
+  highlights?: string[];
   sourcesUsed?: SourceReference[];
   findings?: FindingItem[];
   actions?: ChatAction[];
+  memoryContext?: MemoryContextData;
 } {
   const q = query.toLowerCase().trim();
 
-  // If in pure general mode, or if auto mode detected a general question
-  const isExplicitGeneral = mode === 'general';
-  const isExplicitConnected = mode === 'connected';
-
-  // 1. Quantum Computing / General Knowledge
-  if (q.includes('quantum') || (isExplicitGeneral && (q.includes('what is') || q.includes('explain')))) {
+  // 1. Project Alpha Proposal / Latest proposal search (Exact match from reference)
+  if (q.includes('proposal') || q.includes('project alpha') || q.includes('latest proposal') || q.includes('alpha proposal') || q.includes('alpha')) {
     return {
-      text: `**Quantum computing** is a multidisciplinary field comprising aspects of computer science, physics, and mathematics that utilizes the principles of quantum mechanics to solve complex problems faster than classical computers.
+      text: `Here's the latest Project Alpha proposal I found.\n\nThe newest version is Proposal v2.3, updated yesterday by you. It includes the revised timeline, budget breakdown, and client feedback summary.`,
+      document: {
+        title: 'Project Alpha Proposal v2.3.pdf',
+        source: 'Google Drive',
+        updatedAt: 'Updated May 11, 2024',
+        fileType: 'pdf',
+      },
+      highlights: [
+        'Timeline moved to Aug 2024 – Feb 2025',
+        'Budget increased by 12%',
+        'Client requested 3 additional features',
+        'Next review meeting on May 15',
+      ],
+      sourcesUsed: [
+        MOCK_CHAT_SOURCES.driveProposal,
+        MOCK_CHAT_SOURCES.gmailAlpha,
+        MOCK_CHAT_SOURCES.notionRoadmap,
+        MOCK_CHAT_SOURCES.calendarSync,
+      ],
+      actions: MOCK_CHAT_ACTIONS,
+      memoryContext: MOCK_MEMORY_DATA,
+    };
+  }
 
-### Core Principles:
-1. **Superposition**: Unlike classical bits that represent either 0 or 1, quantum bits (**qubits**) can exist in multidimensional states representing both 0 and 1 simultaneously.
-2. **Entanglement**: Qubits can become intrinsically linked such that the quantum state of one instantaneously determines the state of another, regardless of distance.
-3. **Quantum Interference**: Quantum algorithms use interference patterns to amplify correct computational pathways and cancel out incorrect ones.
-
-### Primary Practical Applications:
-- **Cryptography & Security**: Post-quantum lattice cryptography and quantum key distribution (QKD).
-- **Molecular Simulation & Drug Discovery**: Simulating complex protein folding and molecular interactions.
-- **Optimization Problems**: Large-scale financial risk modeling, logistics, and supply chain routing.`,
+  // 2. Quantum Computing / General Knowledge
+  if (q.includes('quantum') || (mode === 'general' && (q.includes('what is') || q.includes('explain')))) {
+    return {
+      text: `**Quantum computing** is a multidisciplinary field comprising aspects of computer science, physics, and mathematics that utilizes the principles of quantum mechanics to solve complex problems faster than classical computers.\n\n### Core Principles:\n1. **Superposition**: Unlike classical bits that represent either 0 or 1, quantum bits (**qubits**) can exist in multidimensional states.\n2. **Entanglement**: Qubits can become intrinsically linked such that the quantum state of one instantaneously determines the other.\n3. **Quantum Interference**: Quantum algorithms use interference patterns to amplify correct computational pathways.`,
+      highlights: [
+        'Superposition enables simultaneous state evaluation',
+        'Entanglement correlates separated qubits instantaneously',
+        'Interference amplifies constructive probability amplitudes',
+      ],
       actions: [
         { id: 'act-copy', label: 'Copy Explanation', actionType: 'copy_text' },
-        { id: 'act-deep', label: 'Explore Qubit Superposition Math', actionType: 'custom' },
+        { id: 'act-share-q', label: 'Share', actionType: 'share' },
       ],
     };
   }
 
-  // 2. Email Writing / Text Generation
+  // 3. Email Writing / Text Generation
   if (q.includes('write') && (q.includes('email') || q.includes('message') || q.includes('reply') || q.includes('proposal'))) {
     return {
-      text: `Here is a refined, professional email draft tailored for high clarity and executive polish:
-
-**Subject:** Update on Project Alpha Deliverables & Timeline Alignment
-
-**Hi Rahul,**
-
-Thank you for sending over the latest notes. I wanted to quickly touch base regarding our upcoming milestone targets.
-
-We are currently tracking ahead of schedule on core deliverables. To ensure comprehensive QA coverage and automated regression tests before final deployment, our engineering timeline is structured for final sign-off by **Monday morning**.
-
-Let's review the final checklist during our scheduled sync **tomorrow at 10:00 AM**. Looking forward to our discussion!
-
-Best regards,  
-**Satyam**  
-*Lead Architect, NEXORBIT*`,
+      text: `Here is a refined, professional email draft tailored for high clarity and executive polish:\n\n**Subject:** Update on Project Alpha Deliverables & Timeline Alignment\n\n**Hi Rahul,**\n\nThank you for sending over the latest notes. I wanted to quickly touch base regarding our upcoming milestone targets.\n\nWe are currently tracking ahead of schedule on core deliverables. To ensure comprehensive QA coverage, our timeline is structured for final sign-off by **Monday morning**.\n\nLet's review the final checklist during our scheduled sync **tomorrow at 10:00 AM**.\n\nBest regards,\n**Satyam**\n*Lead Architect, NEXORBIT*`,
       actions: [
         { id: 'act-copy-email', label: 'Copy Email Draft', actionType: 'copy_text' },
         { id: 'act-send-gmail', label: 'Open in Gmail Composer', actionType: 'draft_reply' },
@@ -113,149 +139,52 @@ Best regards,
     };
   }
 
-  // 3. Plan Tomorrow / Planning & Brainstorming
-  if (q.includes('plan tomorrow') || q.includes('schedule') || q.includes('my day') || q.includes('plan my day')) {
-    const sources = [MOCK_CHAT_SOURCES.calendarSync, MOCK_CHAT_SOURCES.calendarClientCall, MOCK_CHAT_SOURCES.driveProposal];
+  // 4. Summarize key changes / Client feedback / Compare follow-ups
+  if (q.includes('summarize key changes') || q.includes('key changes') || q.includes('changes')) {
     return {
-      text: `Here is an optimized time-blocked plan for tomorrow based on your scheduled commitments and workspace priorities:
-
-### 🌅 Morning
-- **08:30 AM – 09:30 AM**: ☕ Morning Review & Email triage (Review Rahul's notes on Project Alpha).
-- **09:30 AM – 10:00 AM**: 📑 Meeting Prep: Review *Project_Alpha_Master_Brief_v2.pdf*.
-- **10:00 AM – 11:00 AM**: 🤝 **Project Alpha Sync** (Live meeting with Rahul & Dev Leads).
-
-### ☀️ Afternoon
-- **11:15 AM – 12:45 PM**: 🎯 Deep Focus: Review PR #142 and unblock Sprint 14 backlog tasks.
-- **01:30 PM – 02:15 PM**: 📞 **Client Review & Feedback Session** (Google Calendar).
-- **02:30 PM – 04:30 PM**: ⚡ Engineering sprint execution & documentation update in Notion.
-
-### 🌆 Wrap-up
-- **05:00 PM – 05:30 PM**: 🏁 Clean My Day: Log key decisions and plan next day goals.`,
-      sourcesUsed: sources,
-      actions: [
-        { id: 'act-copy-plan', label: 'Copy Day Plan', actionType: 'copy_text' },
-        { id: 'act-open-cal', label: 'View in Calendar', actionType: 'view_meeting' },
+      text: `Here is the comprehensive summary of key changes in **Proposal v2.3** compared to v2.2:\n\n1. **Delivery Window Extension**: Shifted final milestone from December 2024 to February 2025 to accommodate security audits.\n2. **Budget Allocation Adjustment**: Added $18,500 (+12%) for cloud infrastructure scaling and dedicated staging environments.\n3. **Extended Scope**: Included SSO (SAML/Okta) authentication and automated multi-region backup replication.`,
+      highlights: [
+        'Delivery window extended by 2 months',
+        'Budget revised to account for infrastructure scaling',
+        'Enterprise SSO requirement integrated',
       ],
+      sourcesUsed: [MOCK_CHAT_SOURCES.driveProposal, MOCK_CHAT_SOURCES.notionRoadmap],
+      actions: MOCK_CHAT_ACTIONS,
+      memoryContext: MOCK_MEMORY_DATA,
     };
   }
 
-  // 4. Where is Proposal / Document search
-  if (q.includes('proposal') || q.includes('where is') || q.includes('document') || q.includes('brief')) {
-    const sources = [MOCK_CHAT_SOURCES.driveProposal, MOCK_CHAT_SOURCES.notionRoadmap];
+  if (q.includes('client feedback') || q.includes('show client feedback')) {
     return {
-      text: `The **Project Alpha Proposal** is located in your **Google Drive** root workspace as:
-
-📄 **\`Project_Alpha_Master_Brief_v2.pdf\`**  
-- **Location**: \`/Shared Drives/Product Strategy/Project Alpha/\`
-- **Last Modified**: August 11 by Aryan
-- **Key Summary**: Section 4.1 outlines target deliverables, architectural scope, and sign-off criteria scheduled for Monday, August 18.
-- **Related Documentation**: Linked to the *Alpha Engineering Roadmap* in **Notion** (Sprint 14).`,
-      sourcesUsed: sources,
-      actions: [
-        { id: 'act-open-drive', label: 'Preview Document', actionType: 'open_source', payload: MOCK_CHAT_SOURCES.driveProposal },
-        { id: 'act-copy-link', label: 'Copy Document Path', actionType: 'copy_text' },
+      text: `Here is the client feedback logged from **Rahul Mehta** via Gmail & Notion:\n\n> *"The overall architectural foundation looks solid. Our stakeholders have requested priority integration for Google Workspace OAuth and an automated compliance report export before public launch."*\n\n### Action Items:\n- Review OAuth scope consent workflow in Google Cloud console.\n- Schedule technical review with Rahul on May 15 at 10:00 AM.`,
+      highlights: [
+        'Client approved core architecture',
+        'Requested OAuth & Compliance export features',
+        'Review meeting confirmed for May 15',
       ],
+      sourcesUsed: [MOCK_CHAT_SOURCES.gmailAlpha, MOCK_CHAT_SOURCES.notionRoadmap],
+      actions: MOCK_CHAT_ACTIONS,
+      memoryContext: MOCK_MEMORY_DATA,
     };
   }
 
-  // 5. Rahul's Email / Communication queries
-  if (q.includes('rahul') || (q.includes('email') && !q.includes('write'))) {
-    const sources = [MOCK_CHAT_SOURCES.gmailAlpha, MOCK_CHAT_SOURCES.calendarSync];
+  if (q.includes('compare with v2.2') || q.includes('compare')) {
     return {
-      text: `**Rahul Mehta** sent an email today at **9:15 AM** with the subject:  
-✉️ *"Project Alpha spec review & timeline"*
-
-> *"We are aiming for Friday COB to submit the final spec review before release."*
-
-### Key Context & Findings:
-1. **Deadline Ambiguity**: Rahul's email targets Friday 5:00 PM, while your project master document lists Monday August 18.
-2. **Scheduled Sync**: You have a 1-on-1 Sync with Rahul tomorrow at **10:00 AM** to reconcile these milestones.`,
-      sourcesUsed: sources,
-      findings: [
-        {
-          id: 'find-email-1',
-          type: 'conflict',
-          title: 'Timeline discrepancy with Rahul',
-          timestamp: 'Today, 9:15 AM',
-          description: 'Client email asks for Friday COB, but master project brief specifies Monday.',
-          sources: [MOCK_CHAT_SOURCES.gmailAlpha, MOCK_CHAT_SOURCES.driveProposal],
-          actionLabel: 'Review Conflict →',
-          actionType: 'review_conflict',
-        },
-      ],
-      actions: [
-        { id: 'act-draft-reply', label: 'Draft Reply to Rahul', actionType: 'draft_reply' },
-        { id: 'act-review-conflict', label: 'Review Conflict Details', actionType: 'review_conflict' },
-      ],
+      text: `### Diff: Proposal v2.2 vs Proposal v2.3\n\n| Attribute | Proposal v2.2 | Proposal v2.3 (Latest) |\n| :--- | :--- | :--- |\n| **Target Timeline** | Aug 2024 – Dec 2024 | Aug 2024 – Feb 2025 |\n| **Total Budget** | $154,000 | $172,500 (+12%) |\n| **Core Integrations** | Drive, Gmail | Drive, Gmail, Notion, Calendar |\n| **Status** | Superseded | Active Under Review |`,
+      sourcesUsed: [MOCK_CHAT_SOURCES.driveProposal],
+      actions: MOCK_CHAT_ACTIONS,
     };
   }
 
-  // 6. Meetings / Calendar queries
+  // 5. Meetings / Calendar queries
   if (q.includes('meeting') || q.includes('calendar') || q.includes('events')) {
     const sources = [MOCK_CHAT_SOURCES.calendarSync, MOCK_CHAT_SOURCES.calendarClientCall];
     return {
-      text: `You have **2 upcoming meetings** scheduled on your Google Calendar for tomorrow:
-
-1. **Project Alpha Sync** (10:00 AM – 10:45 AM)
-   - **Attendees**: Rahul Mehta, Dev Leads, Aryan
-   - **Agenda**: Milestone sign-off, spec review, and Friday vs. Monday timeline confirmation.
-   - **Attachments**: *Project_Alpha_Master_Brief_v2.pdf*
-
-2. **Client Review & Feedback Session** (01:30 PM – 02:15 PM)
-   - **Attendees**: Rahul Mehta, Product Operations
-   - **Location**: Google Meet (Sync Room 4)`,
+      text: `You have **2 upcoming meetings** scheduled on your Google Calendar:\n\n1. **Project Alpha Review Meeting** (May 15, 10:00 AM – 10:45 AM)\n   - **Attendees**: Rahul Mehta, Client Stakeholders, Dev Leads\n   - **Agenda**: Proposal v2.3 walkthrough & sign-off.\n\n2. **Client Review & Feedback Session** (Tomorrow, 1:30 PM – 2:15 PM)\n   - **Location**: Google Meet`,
       sourcesUsed: sources,
       actions: [
-        { id: 'act-prep-brief', label: 'Prepare Meeting Briefing', actionType: 'view_meeting' },
         { id: 'act-view-cal', label: 'Open Google Calendar', actionType: 'view_meeting' },
-      ],
-    };
-  }
-
-  // 7. What Changed / Deadline conflicts / Project Alpha status
-  if (q.includes('what changed') || q.includes('conflict') || q.includes('alpha') || q.includes('deadline')) {
-    const sources = [
-      MOCK_CHAT_SOURCES.gmailAlpha,
-      MOCK_CHAT_SOURCES.calendarSync,
-      MOCK_CHAT_SOURCES.driveProposal,
-      MOCK_CHAT_SOURCES.notionRoadmap,
-    ];
-    return {
-      text: `NEXORBIT analyzed your workspace updates across **Gmail**, **Calendar**, **Google Drive**, and **Notion**. Here are the critical insights:
-
-### ⚠️ Primary Attention Item:
-- **Deadline Conflict Detected**: Rahul's latest email notes **Friday COB** as the deliverable deadline, whereas the master scope document (*Project_Alpha_Master_Brief_v2.pdf*) targets **Monday, August 18**.
-
-### 📊 Sprint 14 Status:
-- 8 engineering tasks completed in **Notion**, 2 tasks in code review.
-- PR #142 (*Core API Alignment*) merged successfully on **GitHub**.
-- Sync meeting scheduled for **Tomorrow at 10:00 AM**.`,
-      sourcesUsed: sources,
-      findings: [
-        {
-          id: 'find-alpha-1',
-          type: 'conflict',
-          title: 'Deadline conflict: Friday vs Monday',
-          timestamp: '2 min ago',
-          description: 'Client email mentions Friday while project document specifies Monday.',
-          sources: [MOCK_CHAT_SOURCES.gmailAlpha, MOCK_CHAT_SOURCES.driveProposal],
-          actionLabel: 'Review Conflict →',
-          actionType: 'review_conflict',
-        },
-        {
-          id: 'find-alpha-2',
-          type: 'meeting',
-          title: 'Project Alpha Sync tomorrow',
-          timestamp: '10:00 AM',
-          description: 'Sync scheduled with 4 attendees to finalize release date.',
-          sources: [MOCK_CHAT_SOURCES.calendarSync],
-          actionLabel: 'View Meeting →',
-          actionType: 'view_meeting',
-        },
-      ],
-      actions: [
-        { id: 'act-conflict', label: 'Review Conflict Analysis', actionType: 'review_conflict' },
-        { id: 'act-draft', label: 'Draft Clarification Email', actionType: 'draft_reply' },
+        { id: 'act-share', label: 'Share Schedule', actionType: 'share' },
       ],
     };
   }
@@ -266,28 +195,18 @@ Best regards,
   if (isConnectedSearch) {
     const sources = [MOCK_CHAT_SOURCES.driveProposal, MOCK_CHAT_SOURCES.notionRoadmap, MOCK_CHAT_SOURCES.gmailAlpha];
     return {
-      text: `Based on your connected workspace records across **Google Drive**, **Notion**, and **Gmail**:
-
-- **Current Workspace Context**: Working on Project Alpha milestone verification and Sprint 14 delivery.
-- **Relevant Insights**: We cross-referenced your query against 3 indexed items. All documents and emails are in sync with your local cache.
-
-Is there a specific detail, document excerpt, or draft communication you would like NEXORBIT to generate?`,
+      text: `Based on your connected workspace records across **Google Drive**, **Notion**, and **Gmail**:\n\n- **Workspace Context**: Active records indexed across 4 connected services.\n- **Relevant Insight**: Found 3 matching documents and 2 recent thread updates matching "${query}".\n\nWould you like me to summarize any specific document or prepare a draft?`,
       sourcesUsed: sources,
-      actions: [
-        { id: 'act-more', label: 'Search More Files', actionType: 'custom' },
-        { id: 'act-copy-gen', label: 'Copy Summary', actionType: 'copy_text' },
-      ],
+      actions: MOCK_CHAT_ACTIONS,
+      memoryContext: MOCK_MEMORY_DATA,
     };
   }
 
   return {
-    text: `Here is the analysis for: **"${query}"**
-
-1. **Strategic Perspective**: Clarifying scope, dependencies, and execution milestones ensures clean alignment across your workflow.
-2. **Recommended Approach**: Break the objective down into incremental deliverables with verifiable verification criteria.
-3. **Execution Ready**: NEXORBIT can assist with drafting specifications, writing code, generating emails, or retrieving referenced workspace artifacts whenever needed.`,
+    text: `Here is the analysis for: **"${query}"**\n\n1. **Strategic Assessment**: Clear objective alignment across your workflow.\n2. **Execution Steps**: Incremental milestones structured for high accuracy.\n3. **Tools & Integrations**: NEXORBIT can draft content, review files, or manage connected apps whenever needed.`,
     actions: [
       { id: 'act-copy-default', label: 'Copy Answer', actionType: 'copy_text' },
+      { id: 'act-share-default', label: 'Share', actionType: 'share' },
     ],
   };
 }
