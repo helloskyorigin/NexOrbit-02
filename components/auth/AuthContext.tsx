@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider, githubProvider } from '../../lib/firebase';
 import { AuthContextType, AuthUser, AuthView } from './types';
 import { Language, translations } from './translations';
@@ -99,53 +99,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Helper to load profile from Firestore or localStorage
-  const loadUserProfile = async (uid: string) => {
-    let profileData: {
-      displayName?: string;
-      country?: string;
-      language?: Language;
-      timezone?: string;
-      workStyle?: string;
-      onboardingCompleted?: boolean;
-    } = {};
-
-    // 1. Try local storage cache
+  // Helper to load or create user profile in Firestore (Phase 1)
+  const loadOrCreateUserProfile = async (firebaseUser: any) => {
+    let profileData: Record<string, any> = {};
+    const userRef = doc(db, 'users', firebaseUser.uid);
     try {
-      const stored = localStorage.getItem(`nexorbit_profile_${uid}`);
-      if (stored) {
-        profileData = JSON.parse(stored);
-      }
-    } catch (e) {}
-
-    // 2. Try Firestore doc
-    try {
-      if (db) {
-        const userRef = doc(db, 'users', uid);
-        const snapshot = await getDoc(userRef);
-        if (snapshot.exists()) {
-          const remoteData = snapshot.data();
-          profileData = { ...profileData, ...remoteData };
-        }
+      const snapshot = await getDoc(userRef);
+      if (snapshot.exists()) {
+        profileData = snapshot.data();
+        await updateDoc(userRef, {
+          lastLoginAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        profileData = {
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+          email: firebaseUser.email || '',
+          photoURL: firebaseUser.photoURL || null,
+          provider: firebaseUser.providerData[0]?.providerId || 'password',
+          country: '',
+          language: 'en',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          onboardingCompleted: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
+        };
+        await setDoc(userRef, profileData);
       }
     } catch (e) {
-      // Offline / fallback to local storage
+      console.warn('Firestore user profile sync warning:', e);
+      try {
+        const stored = localStorage.getItem('nexorbit_profile_' + firebaseUser.uid);
+        if (stored) {
+          profileData = JSON.parse(stored);
+        }
+      } catch (err) {}
     }
-
     return profileData;
   };
-
-  // Listen to Firebase Auth state changes
+// Listen to Firebase Auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const profile = await loadUserProfile(firebaseUser.uid);
+        const profile = await loadOrCreateUserProfile(firebaseUser);
         const provider = firebaseUser.providerData[0]?.providerId || 'password';
         const displayName =
           profile.displayName ||
           firebaseUser.displayName ||
           firebaseUser.email?.split('@')[0] ||
           '';
-        const userLang = profile.language || language || 'en';
+        const userLang = profile.language || 'en';
 
         // Check whether onboarding is completed
         const hasCompletedOnboarding =
@@ -168,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setUser(updatedUser);
-        setLanguageState(userLang);
+        setLanguageState((prev) => profile.language || prev || 'en');
 
         if (hasCompletedOnboarding) {
           setIsAuthenticated(true);
@@ -204,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => unsubscribe();
-  }, [language]);
+  }, []);
 
   // REAL GOOGLE AUTHENTICATION
   const signInWithGoogle = async () => {
@@ -215,7 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
-      const profile = await loadUserProfile(firebaseUser.uid);
+      const profile = await loadOrCreateUserProfile(firebaseUser);
 
       const hasCompleted =
         profile.onboardingCompleted === true ||
@@ -247,7 +252,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const result = await signInWithPopup(auth, githubProvider);
       const firebaseUser = result.user;
-      const profile = await loadUserProfile(firebaseUser.uid);
+      const profile = await loadOrCreateUserProfile(firebaseUser);
 
       const hasCompleted =
         profile.onboardingCompleted === true ||

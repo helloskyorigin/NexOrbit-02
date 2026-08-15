@@ -2,6 +2,11 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: [
+    'ais-dev-zapuqjtfr7botjrsv37ckt-37033593928.asia-southeast1.run.app',
+    'localhost:3000',
+    '*.run.app'
+  ],
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -26,10 +31,6 @@ const nextConfig: NextConfig = {
     ],
   },
   transpilePackages: ['motion'],
-  experimental: {
-    cpus: 1,
-    workerThreads: false,
-  },
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
     // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
