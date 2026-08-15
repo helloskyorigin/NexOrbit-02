@@ -65,6 +65,7 @@ export interface AuthContextType {
     timezone?: string;
     workStyle?: string;
   }) => Promise<void>;
+  updateUserProfile: (newData: Partial<AuthUser>) => Promise<void>;
   signOut: () => void;
   toggleDemoAuth: () => void;
 }

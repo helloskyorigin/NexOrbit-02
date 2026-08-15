@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Authenticated user profile document",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Auth UID" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "provider": { "type": "string" },
+        "country": { "type": "string" },
+        "language": { "type": "string" },
+        "timezone": { "type": "string" },
+        "workStyle": { "type": "string" },
+        "onboardingCompleted": { "type": "boolean" },
+        "plan": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Connection": {
+      "title": "Connected Service Info",
+      "description": "Metadata for external connected applications",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "provider": { "type": "string" },
+        "name": { "type": "string" },
+        "connected": { "type": "boolean" },
+        "connectedAt": { "type": "string" },
+        "email": { "type": "string" },
+        "scopes": { "type": "string" }
+      },
+      "required": ["uid", "provider", "connected"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Primary user profiles collection"
+    },
+    "/users/{userId}/connections/{provider}": {
+      "schema": "Connection",
+      "description": "External integration connection entries"
+    }
+  }
+}

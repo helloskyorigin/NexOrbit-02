@@ -510,6 +510,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // UPDATE USER PROFILE IN FIRESTORE
+  const updateUserProfile = async (newData: Partial<AuthUser>) => {
+    setLoading(true);
+    clearError();
+    try {
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) {
+        throw new Error('No authenticated user session found.');
+      }
+
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      
+      // Filter out any fields that are undefined or shouldn't go to database directly
+      const cleanData: Record<string, any> = {};
+      if (newData.displayName !== undefined) cleanData.displayName = newData.displayName;
+      if (newData.country !== undefined) cleanData.country = newData.country;
+      if (newData.language !== undefined) cleanData.language = newData.language;
+      if (newData.timezone !== undefined) cleanData.timezone = newData.timezone;
+      if (newData.workStyle !== undefined) cleanData.workStyle = newData.workStyle;
+      if (newData.photoURL !== undefined) cleanData.photoURL = newData.photoURL;
+      
+      cleanData.updatedAt = new Date().toISOString();
+
+      // Write directly to firestore
+      await updateDoc(userRef, cleanData);
+
+      // Save to localStorage cache
+      const stored = localStorage.getItem(`nexorbit_profile_${firebaseUser.uid}`);
+      let currentCache = {};
+      if (stored) {
+        try {
+          currentCache = JSON.parse(stored);
+        } catch (e) {}
+      }
+      localStorage.setItem(
+        `nexorbit_profile_${firebaseUser.uid}`,
+        JSON.stringify({ ...currentCache, ...cleanData })
+      );
+
+      if (newData.language) {
+        localStorage.setItem('nexorbit_lang', newData.language);
+        setLanguageState(newData.language);
+      }
+
+      // Update local state
+      setUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...newData,
+        };
+      });
+    } catch (err: unknown) {
+      console.warn('Update Profile Setup caught error:', err);
+      // Construct JSON message for firestore error handling compliance
+      const errInfo = {
+        error: err instanceof Error ? err.message : String(err),
+        authInfo: {
+          userId: auth.currentUser?.uid,
+          email: auth.currentUser?.email,
+        },
+        operationType: 'update',
+        path: `users/${auth.currentUser?.uid}`,
+      };
+      console.error('Firestore Error: ', JSON.stringify(errInfo));
+      setAuthError(err instanceof Error ? err.message : String(err));
+      throw new Error(JSON.stringify(errInfo));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // REAL SIGN OUT
   const signOut = async () => {
     setLoading(true);
@@ -576,6 +648,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUpWithEmail,
         sendPasswordReset,
         completeProfileSetup,
+        updateUserProfile,
         signOut,
         toggleDemoAuth,
       }}

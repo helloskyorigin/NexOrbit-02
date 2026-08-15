@@ -38,30 +38,52 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onNavigate,
   className,
 }) => {
-  const { user: authUser, signOut } = useAuth();
+  const { user: authUser, signOut, updateUserProfile } = useAuth();
   const { addToast } = useToast();
+
+  const langMap: Record<string, string> = {
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+    de: 'German',
+    ja: 'Japanese',
+  };
+
+  const langCodeMap: Record<string, any> = {
+    'English': 'en',
+    'Spanish': 'es',
+    'French': 'fr',
+    'German': 'de',
+    'Japanese': 'ja'
+  };
 
   // Active subnav tab state
   const [activeTab, setActiveTab] = useState<SettingsTabId>('profile');
 
   // User profile state
-  const [user, setUser] = useState<UserProfile>(() => ({
-    name: authUser?.displayName || (authUser?.email ? authUser.email.split('@')[0] : 'Satyam'),
-    email: authUser?.email || 'satyam@example.com',
-    role: 'Workspace Member',
-    nexorbitId: authUser?.id ? `nxo_${authUser.id.slice(0, 10)}` : 'nxo_7f3a9b2c1d4e',
-    memberSince: authUser?.createdAt ? new Date(authUser.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'May 11, 2024',
-    timezone: '(GMT+05:30) Asia/Kolkata',
-    language: 'English',
-    plan: authUser?.plan || 'Free Plan',
-  }));
+  const [user, setUser] = useState<UserProfile>(() => {
+    const userLang = authUser?.language ? (langMap[authUser.language] || 'English') : 'English';
+    return {
+      name: authUser?.displayName || (authUser?.email ? authUser.email.split('@')[0] : 'User'),
+      email: authUser?.email || 'user@nexorbit.ai',
+      role: 'Workspace Member',
+      nexorbitId: authUser?.uid ? `nxo_${authUser.uid.slice(0, 10)}` : 'nxo_7f3a9b2c1d4e',
+      memberSince: 'May 11, 2024',
+      timezone: authUser?.timezone || '(GMT+05:30) Asia/Kolkata',
+      language: userLang,
+      plan: 'Free Plan',
+    };
+  });
 
   // General preferences state
-  const [generalPrefs, setGeneralPrefs] = useState<GeneralPreferences>({
-    language: 'English',
-    timezone: '(GMT+05:30) Asia/Kolkata',
-    dateFormat: 'MMM D, YYYY',
-    startupView: 'clean-my-day',
+  const [generalPrefs, setGeneralPrefs] = useState<GeneralPreferences>(() => {
+    const userLang = authUser?.language ? (langMap[authUser.language] || 'English') : 'English';
+    return {
+      language: userLang,
+      timezone: authUser?.timezone || '(GMT+05:30) Asia/Kolkata',
+      dateFormat: 'MMM D, YYYY',
+      startupView: 'clean-my-day',
+    };
   });
 
   // AI Brain preferences state
@@ -150,7 +172,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {activeTab === 'general' && (
               <GeneralTab
                 preferences={generalPrefs}
-                onChange={(updated) => setGeneralPrefs({ ...generalPrefs, ...updated })}
+                onChange={async (updated) => {
+                  const newPrefs = { ...generalPrefs, ...updated };
+                  setGeneralPrefs(newPrefs);
+                  
+                  // Keep user object in sync
+                  setUser((prev) => ({
+                    ...prev,
+                    language: newPrefs.language,
+                    timezone: newPrefs.timezone,
+                  }));
+
+                  try {
+                    const updateObj: any = {};
+                    if (updated.language) {
+                      updateObj.language = langCodeMap[updated.language] || 'en';
+                    }
+                    if (updated.timezone) {
+                      updateObj.timezone = updated.timezone;
+                    }
+                    await updateUserProfile(updateObj);
+                    addToast({
+                      type: 'success',
+                      title: 'Preferences Saved',
+                      description: 'Your general settings have been synced to your profile.',
+                    });
+                  } catch (e) {
+                    console.error('Error saving general preferences:', e);
+                  }
+                }}
               />
             )}
 
@@ -218,7 +268,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         isOpen={isEditProfileOpen}
         onClose={() => setIsEditProfileOpen(false)}
         user={user}
-        onSave={(updatedUser) => setUser(updatedUser)}
+        onSave={async (updatedUser) => {
+          setUser(updatedUser);
+          
+          // Also update generalPrefs language & timezone
+          setGeneralPrefs((prev) => ({
+            ...prev,
+            language: updatedUser.language,
+            timezone: updatedUser.timezone,
+          }));
+
+          try {
+            const langCode = langCodeMap[updatedUser.language] || 'en';
+            await updateUserProfile({
+              displayName: updatedUser.name,
+              timezone: updatedUser.timezone,
+              language: langCode,
+            });
+          } catch (e) {
+            console.error('Error saving profile settings:', e);
+          }
+        }}
       />
 
       <ViewPlansModal

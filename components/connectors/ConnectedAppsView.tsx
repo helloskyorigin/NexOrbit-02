@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConnectorItem, SyncState } from './types';
 import { INITIAL_MOCK_CONNECTORS, AVAILABLE_SECONDARY_CONNECTORS } from './mockData';
 import { ConnectedAppsHeader } from './ConnectedAppsHeader';
@@ -14,6 +14,9 @@ import { ConnectorDetail } from './ConnectorDetail';
 import { DisconnectModal } from './DisconnectModal';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '../ui/Toast';
+import { useAuth } from '../auth/AuthContext';
+import { db } from '../../lib/firebase';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 
 export interface ConnectedAppsViewProps {
   onNavigate?: (pageId: string) => void;
@@ -25,6 +28,7 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
   initialSelectedConnectorId,
 }) => {
   const { addToast } = useToast();
+  const { user } = useAuth();
 
   // Primary V1 connectors state
   const [connectors, setConnectors] = useState<ConnectorItem[]>(INITIAL_MOCK_CONNECTORS);
@@ -32,6 +36,7 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
   const [availableConnectors, setAvailableConnectors] = useState<ConnectorItem[]>(AVAILABLE_SECONDARY_CONNECTORS);
 
   const [showAllAvailable, setShowAllAvailable] = useState(false);
+  const [loadingConnections, setLoadingConnections] = useState(false);
 
   // Modal / Drawer states
   const [selectedToConnect, setSelectedToConnect] = useState<ConnectorItem | null>(null);
@@ -47,8 +52,68 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
   });
   const [selectedToDisconnect, setSelectedToDisconnect] = useState<ConnectorItem | null>(null);
 
+  // Real connection sync from Firestore
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchConnections = async () => {
+      setLoadingConnections(true);
+      try {
+        const colRef = collection(db, 'users', user.uid, 'connections');
+        const snapshot = await getDocs(colRef);
+        
+        const dbConnections: Record<string, { connected: boolean; lastSynced?: string }> = {};
+        snapshot.forEach((doc) => {
+          dbConnections[doc.id] = doc.data() as any;
+        });
+
+        // Merge with initial list
+        setConnectors((prev) =>
+          prev.map((c) => {
+            const dbVal = dbConnections[c.id];
+            if (dbVal) {
+              return {
+                ...c,
+                status: dbVal.connected ? ('connected' as const) : ('not_connected' as const),
+                statusLabel: dbVal.connected ? 'Connected' : 'Not connected',
+                lastSynced: dbVal.connected ? (dbVal.lastSynced ? new Date(dbVal.lastSynced).toLocaleDateString() : 'Synced recently') : undefined,
+                contextCount: dbVal.connected ? (c.id === 'gmail' ? 'Active context syncing' : c.id === 'calendar' ? 'Syncing active schedule' : 'Connected') : undefined,
+              };
+            } else {
+              return {
+                ...c,
+                contextCount: c.status === 'connected' ? 'Active' : undefined,
+              };
+            }
+          })
+        );
+
+        setAvailableConnectors((prev) =>
+          prev.map((c) => {
+            const dbVal = dbConnections[c.id];
+            if (dbVal) {
+              return {
+                ...c,
+                status: dbVal.connected ? ('connected' as const) : ('not_connected' as const),
+                statusLabel: dbVal.connected ? 'Connected' : 'Not connected',
+                contextCount: dbVal.connected ? 'Active' : undefined,
+              };
+            }
+            return c;
+          })
+        );
+      } catch (e) {
+        console.warn('Error fetching connections:', e);
+      } finally {
+        setLoadingConnections(false);
+      }
+    };
+
+    fetchConnections();
+  }, [user?.uid]);
+
   // Handle Connect Confirmation
-  const handleConfirmConnect = (connectorId: string) => {
+  const handleConfirmConnect = async (connectorId: string) => {
     // Check if in primary connectors list
     const isPrimary = connectors.some((c) => c.id === connectorId);
 
@@ -61,6 +126,7 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
               status: 'connected' as SyncState,
               statusLabel: 'Connected',
               lastSynced: 'Synced just now',
+              contextCount: 'Active sync',
             };
           }
           return c;
@@ -75,15 +141,44 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
           status: 'connected' as SyncState,
           statusLabel: 'Connected',
           lastSynced: 'Synced just now',
+          contextCount: 'Active sync',
         };
         setConnectors((prev) => [...prev, updatedItem]);
         setAvailableConnectors((prev) => prev.filter((c) => c.id !== connectorId));
       }
     }
+
+    // Firestore update
+    if (user?.uid) {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'connections', connectorId);
+        await setDoc(docRef, {
+          connected: true,
+          provider: connectorId,
+          lastSynced: new Date().toISOString(),
+          connectedAt: new Date().toISOString(),
+          uid: user.uid,
+        });
+        addToast({
+          type: 'success',
+          title: 'App Connected',
+          description: `${connectorId.toUpperCase()} integration has been safely initialized.`,
+        });
+      } catch (err: unknown) {
+        const errInfo = {
+          error: err instanceof Error ? err.message : String(err),
+          authInfo: { userId: user.uid },
+          operationType: 'write',
+          path: `users/${user.uid}/connections/${connectorId}`,
+        };
+        console.error('Firestore Error: ', JSON.stringify(errInfo));
+        throw new Error(JSON.stringify(errInfo));
+      }
+    }
   };
 
   // Handle Disconnect Confirmation
-  const handleConfirmDisconnect = (connectorId: string) => {
+  const handleConfirmDisconnect = async (connectorId: string) => {
     setConnectors((prev) =>
       prev.map((c) => {
         if (c.id === connectorId) {
@@ -92,15 +187,43 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
             status: 'not_connected' as SyncState,
             statusLabel: 'Not connected',
             lastSynced: undefined,
+            contextCount: undefined,
           };
         }
         return c;
       })
     );
+
+    // Firestore update
+    if (user?.uid) {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'connections', connectorId);
+        await setDoc(docRef, {
+          connected: false,
+          provider: connectorId,
+          uid: user.uid,
+          updatedAt: new Date().toISOString(),
+        });
+        addToast({
+          type: 'info',
+          title: 'App Disconnected',
+          description: `${connectorId.toUpperCase()} integration has been disconnected.`,
+        });
+      } catch (err: unknown) {
+        const errInfo = {
+          error: err instanceof Error ? err.message : String(err),
+          authInfo: { userId: user.uid },
+          operationType: 'write',
+          path: `users/${user.uid}/connections/${connectorId}`,
+        };
+        console.error('Firestore Error: ', JSON.stringify(errInfo));
+        throw new Error(JSON.stringify(errInfo));
+      }
+    }
   };
 
   // Handle Sync Now
-  const handleSyncNow = (connectorId: string) => {
+  const handleSyncNow = async (connectorId: string) => {
     setConnectors((prev) =>
       prev.map((c) => {
         if (c.id === connectorId) {
@@ -114,6 +237,32 @@ export const ConnectedAppsView: React.FC<ConnectedAppsViewProps> = ({
         return c;
       })
     );
+
+    if (user?.uid) {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'connections', connectorId);
+        await setDoc(docRef, {
+          connected: true,
+          provider: connectorId,
+          lastSynced: new Date().toISOString(),
+          uid: user.uid,
+        }, { merge: true });
+        addToast({
+          type: 'success',
+          title: 'App Synced',
+          description: `Latest workspace updates fetched from ${connectorId.toUpperCase()}.`,
+        });
+      } catch (err: unknown) {
+        const errInfo = {
+          error: err instanceof Error ? err.message : String(err),
+          authInfo: { userId: user.uid },
+          operationType: 'write',
+          path: `users/${user.uid}/connections/${connectorId}`,
+        };
+        console.error('Firestore Error: ', JSON.stringify(errInfo));
+        throw new Error(JSON.stringify(errInfo));
+      }
+    }
   };
 
   const handleConnectNewAppClick = () => {

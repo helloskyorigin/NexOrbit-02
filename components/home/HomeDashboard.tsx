@@ -27,6 +27,9 @@ import { cn } from '../../lib/utils';
 import { ConnectorId } from '../shell/ConnectorModal';
 import { useToast } from '../ui/Toast';
 import { AIMode } from '../chat/types';
+import { useAuth } from '../auth/AuthContext';
+import { db } from '../../lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 export interface AttachmentItem {
   id: string;
@@ -50,8 +53,41 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   userName = 'Satyam',
 }) => {
   const { addToast } = useToast();
+  const { user } = useAuth();
   const [commandText, setCommandText] = useState('');
   const [currentMode, setCurrentMode] = useState<AIMode>('auto');
+
+  // Use real user displayName or email instead of a hardcoded string
+  const activeUserName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'User');
+
+  // Real connections state from Firestore
+  const [activeConnections, setActiveConnections] = useState<string[]>([]);
+  const [loadingConnections, setLoadingConnections] = useState(true);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchConnections = async () => {
+      try {
+        const colRef = collection(db, 'users', user.uid, 'connections');
+        const snapshot = await getDocs(colRef);
+        const connectedIds: string[] = [];
+        snapshot.forEach((doc) => {
+          if (doc.data().connected === true) {
+            connectedIds.push(doc.id);
+          }
+        });
+        setActiveConnections(connectedIds);
+      } catch (e) {
+        console.warn('Error loading dashboard connections:', e);
+      } finally {
+        setLoadingConnections(false);
+      }
+    };
+
+    fetchConnections();
+  }, [user?.uid]);
+
 
   // Multimodal Attachment State
   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
@@ -261,6 +297,47 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     });
   };
 
+  // Determine active integrations dynamically to replace hardcoded values with real status
+  const hasGmail = activeConnections.includes('gmail');
+  const hasCalendar = activeConnections.includes('calendar');
+  const hasDrive = activeConnections.includes('drive');
+  const hasGithub = activeConnections.includes('github');
+  const hasNotion = activeConnections.includes('notion');
+
+  const attentionCount = (hasGmail || hasDrive) ? 2 : 0;
+  const changedCount = (hasGithub || hasNotion || hasDrive) ? 3 : 0;
+  const upcomingCount = hasCalendar ? 2 : 0;
+  const completedCount = (hasGmail || hasGithub) ? 6 : 0;
+
+  // Dynamically filter Today's Focus
+  const focusItems = [];
+  if (hasCalendar) {
+    focusItems.push({ title: 'Deadline conflict detected', desc: 'Friday vs Monday', action: 'Review', icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50' });
+    focusItems.push({ title: 'Meeting tomorrow', desc: '10:00 AM', action: 'Prepare', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' });
+  }
+  if (hasGmail) {
+    focusItems.push({ title: "Client hasn't replied", desc: 'Rahul · 4 days', action: 'Open', icon: Mail, color: 'text-indigo-600', bg: 'bg-indigo-50' });
+  }
+
+  // Dynamically filter What Changed
+  const recentChanges = [];
+  if (hasCalendar || hasGithub || hasNotion) {
+    recentChanges.push({ title: 'Project Alpha deadline changed', time: '2h ago', icon: Calendar, desc: 'Dec 12 → Dec 15' });
+  }
+  if (hasGmail) {
+    recentChanges.push({ title: 'Rahul replied', time: '4h ago', icon: Mail, desc: 'Re: Project Alpha · "Thanks for the update..."' });
+  }
+  if (hasDrive || hasNotion) {
+    recentChanges.push({ title: 'Proposal v2 updated', time: '6h ago', icon: FileText, desc: 'In Project Alpha' });
+  }
+
+  // Dynamically filter Upcoming events
+  const upcomingEvents = hasCalendar ? [
+    { time: '10:00 AM', title: 'Project Alpha Sync', source: 'Google Meet', icon: Calendar, color: 'text-indigo-600' },
+    { time: '1:30 PM', title: 'Client Call', source: 'Zoom Meeting', icon: Video, color: 'text-purple-600' },
+    { time: '4:00 PM', title: 'Product Review', source: 'NEXORBIT HQ', icon: Globe, color: 'text-emerald-600' },
+  ] : [];
+
   return (
     <div className="relative min-h-full w-full flex flex-col justify-between overflow-x-hidden pb-8 select-none">
       {/* 1. COSMIC AMBIENT ORBITAL BACKGROUND (SVG + CSS) */}
@@ -385,7 +462,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               </button>
             )}
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-950 flex items-center gap-2">
-              <span>Good morning, {userName}</span>
+              <span>Good morning, {activeUserName}</span>
               <span className="text-indigo-600 font-normal inline-block text-xl sm:text-2xl animate-pulse">
                 ✦
               </span>
@@ -414,7 +491,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             className="h-9 w-9 rounded-full overflow-hidden border border-slate-200/80 shadow-2xs cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all shrink-0 bg-indigo-600 text-white flex items-center justify-center font-bold text-sm"
             title="User Settings"
           >
-            S
+            {activeUserName.charAt(0).toUpperCase()}
           </div>
         </div>
       </div>
@@ -638,10 +715,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       {/* 4. STATUS SUMMARY (4 CONSISTENT COMPACT METRIC CARDS) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 my-6 sm:my-8 px-1">
         {[
-          { label: 'Need attention', count: 2, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100/80' },
-          { label: 'Changed', count: 3, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100/80' },
-          { label: 'Upcoming', count: 2, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100/80' },
-          { label: 'Completed', count: 6, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100/80' }
+          { label: 'Need attention', count: attentionCount, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100/80' },
+          { label: 'Changed', count: changedCount, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100/80' },
+          { label: 'Upcoming', count: upcomingCount, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100/80' },
+          { label: 'Completed', count: completedCount, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100/80' }
         ].map((stat, i) => (
           <div
             key={i}
@@ -649,7 +726,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               if (stat.label === 'Need attention') onNavigate('clean-my-day');
               else if (stat.label === 'Changed') onNavigate('what-changed');
               else if (stat.label === 'Upcoming') onOpenConnector('calendar');
-              else addToast({ type: 'success', title: 'Completed Tasks', description: '6 tasks successfully finished.' });
+              else addToast({ type: 'success', title: 'Completed Tasks', description: `${completedCount} tasks successfully finished.` });
             }}
             className={cn(
               'flex items-center justify-between p-4 rounded-3xl border bg-white shadow-2xs hover:shadow-sm transition-all cursor-pointer group',
@@ -695,35 +772,43 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </div>
             
             <div className="space-y-3">
-              {[
-                { title: 'Deadline conflict detected', desc: 'Friday vs Monday', action: 'Review', icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50' },
-                { title: 'Client hasn\'t replied', desc: 'Rahul · 4 days', action: 'Open', icon: Mail, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                { title: 'Meeting tomorrow', desc: '10:00 AM', action: 'Prepare', icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-50' },
-              ].map((focus, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className={`h-10 w-10 rounded-2xl ${focus.bg} ${focus.color} flex items-center justify-center shrink-0`}>
-                      <focus.icon className="h-5 w-5" />
+              {focusItems.length > 0 ? (
+                focusItems.map((focus, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`h-10 w-10 rounded-2xl ${focus.bg} ${focus.color} flex items-center justify-center shrink-0`}>
+                        <focus.icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-slate-900 truncate">{focus.title}</div>
+                        <div className="text-xs text-slate-500 truncate mt-0.5">{focus.desc}</div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-900 truncate">{focus.title}</div>
-                      <div className="text-xs text-slate-500 truncate mt-0.5">{focus.desc}</div>
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (focus.action === 'Review') onNavigate('clean-my-day');
+                        else if (focus.action === 'Open') handleCommandSubmit(undefined, 'Draft follow up email for Rahul');
+                        else onOpenConnector('calendar');
+                      }}
+                      className="shrink-0 text-xs font-semibold text-slate-700 bg-white border border-slate-200 shadow-3xs px-3.5 py-1.5 rounded-xl group-hover:border-indigo-300 group-hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>{focus.action}</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
                   </div>
+                ))
+              ) : (
+                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs space-y-2">
+                  <p>No active focus items indexes.</p>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (focus.action === 'Review') onNavigate('clean-my-day');
-                      else if (focus.action === 'Open') handleCommandSubmit(undefined, 'Draft follow up email for Rahul');
-                      else onOpenConnector('calendar');
-                    }}
-                    className="shrink-0 text-xs font-semibold text-slate-700 bg-white border border-slate-200 shadow-3xs px-3.5 py-1.5 rounded-xl group-hover:border-indigo-300 group-hover:text-indigo-600 transition-colors flex items-center gap-1 cursor-pointer"
+                    onClick={() => onNavigate('connected-apps')}
+                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 inline-block"
                   >
-                    <span>{focus.action}</span>
-                    <ChevronRight className="h-3 w-3" />
+                    Connect Gmail or Google Calendar to sync your schedule
                   </button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -752,28 +837,30 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               </div>
 
               <div className="space-y-2.5">
-                {[
-                  { title: 'Project Alpha deadline changed', time: '2h ago', icon: Calendar, desc: 'Dec 12 → Dec 15' },
-                  { title: 'Rahul replied', time: '4h ago', icon: Mail, desc: 'Re: Project Alpha · "Thanks for the update..."' },
-                  { title: 'Proposal v2 updated', time: '6h ago', icon: FileText, desc: 'In Project Alpha' },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    onClick={() => onNavigate('what-changed')}
-                    className="flex items-center justify-between gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
-                        <item.icon className="h-4 w-4" />
+                {recentChanges.length > 0 ? (
+                  recentChanges.map((item, i) => (
+                    <div
+                      key={i}
+                      onClick={() => onNavigate('what-changed')}
+                      className="flex items-center justify-between gap-3 p-2.5 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-slate-900 truncate">{item.title}</div>
+                          <div className="text-[11px] text-slate-500 truncate">{item.desc}</div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 truncate">{item.title}</div>
-                        <div className="text-[11px] text-slate-500 truncate">{item.desc}</div>
-                      </div>
+                      <span className="text-[11px] text-slate-400 shrink-0 font-medium">{item.time}</span>
                     </div>
-                    <span className="text-[11px] text-slate-400 shrink-0 font-medium">{item.time}</span>
+                  ))
+                ) : (
+                  <div className="p-6 text-center rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+                    No recent updates. Connect your workspace integrations to start tracking changes.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -825,34 +912,42 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {[
-            { time: '10:00 AM', title: 'Project Alpha Sync', source: 'Google Meet', icon: Calendar, color: 'text-indigo-600' },
-            { time: '1:30 PM', title: 'Client Call', source: 'Zoom Meeting', icon: Video, color: 'text-purple-600' },
-            { time: '4:00 PM', title: 'Product Review', source: 'NEXORBIT HQ', icon: Globe, color: 'text-emerald-600' },
-          ].map((item, i) => (
-            <div
-              key={i}
-              onClick={() => onOpenConnector('calendar')}
-              className="p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-slate-50 transition-all cursor-pointer flex flex-col justify-between gap-3 group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold font-mono text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
-                  {item.time}
-                </span>
-                <div className={`h-8 w-8 rounded-xl bg-slate-50 group-hover:bg-white ${item.color} flex items-center justify-center transition-colors`}>
-                  <item.icon className="h-4 w-4" />
+          {upcomingEvents.length > 0 ? (
+            upcomingEvents.map((item, i) => (
+              <div
+                key={i}
+                onClick={() => onOpenConnector('calendar')}
+                className="p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-slate-50 transition-all cursor-pointer flex flex-col justify-between gap-3 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-mono text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                    {item.time}
+                  </span>
+                  <div className={`h-8 w-8 rounded-xl bg-slate-50 group-hover:bg-white ${item.color} flex items-center justify-center transition-colors`}>
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                    {item.title}
+                  </div>
+                  <div className="text-xs text-slate-500 truncate mt-0.5">
+                    {item.source}
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
-                  {item.title}
-                </div>
-                <div className="text-xs text-slate-500 truncate mt-0.5">
-                  {item.source}
-                </div>
-              </div>
+            ))
+          ) : (
+            <div className="p-4 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs flex flex-col justify-center items-center gap-2 min-h-[120px] col-span-1 sm:col-span-2 lg:col-span-3">
+              <p>No synced calendar events today.</p>
+              <button
+                onClick={() => onOpenConnector('calendar')}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+              >
+                + Connect Google Calendar
+              </button>
             </div>
-          ))}
+          )}
 
           {/* Add more card */}
           <div
